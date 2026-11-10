@@ -8,9 +8,11 @@
   :root { --bg:#F6F4F1; --surface:#fff; --s2:#F0EDE8; --ink:#1C1917; --muted:#6B645D; --line:#E4DFD8; --accent:#9F1239;
           --accent-soft:#FCE7EC; --warn:#92400E; --warn-bg:#FFFBEB; --bad:#991B1B; --checker:#e9e6e1; --keep:#16a34a; --remove:#dc2626; }
   @media (prefers-color-scheme: dark) {
-    :root { --bg:#161413; --surface:#1F1C1B; --s2:#2A2624; --ink:#F2EEEA; --muted:#A9A19A; --line:#38322F; --accent:#F43F5E;
+    :root:not([data-theme="light"]) { --bg:#161413; --surface:#1F1C1B; --s2:#2A2624; --ink:#F2EEEA; --muted:#A9A19A; --line:#38322F; --accent:#F43F5E;
             --accent-soft:#3B1520; --warn:#FCD34D; --warn-bg:#3A2A05; --bad:#FCA5A5; --checker:#2e2a28; }
   }
+  :root[data-theme="dark"] { --bg:#161413; --surface:#1F1C1B; --s2:#2A2624; --ink:#F2EEEA; --muted:#A9A19A; --line:#38322F; --accent:#F43F5E;
+            --accent-soft:#3B1520; --warn:#FCD34D; --warn-bg:#3A2A05; --bad:#FCA5A5; --checker:#2e2a28; }
   * { box-sizing:border-box; }
   [hidden] { display:none !important; }
   body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 system-ui, -apple-system, "Segoe UI", "Noto Sans Arabic", Tahoma, sans-serif; }
@@ -99,6 +101,7 @@
   <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="7" width="26" height="20" rx="5" fill="var(--accent)"/><circle cx="16" cy="17" r="6" fill="#fff"/><circle cx="16" cy="17" r="3.2" fill="var(--accent)"/><rect x="10" y="4" width="8" height="4" rx="2" fill="var(--accent)"/></svg>
   <div><h1 data-t="title">Studio</h1><div class="sub" data-t="tagline">Clean, matching product photos in one click</div></div>
   <div class="sp"></div>
+  <a id="back" class="btn sm" href="#" hidden></a>
   <button id="lang" type="button" aria-label="Language">ع</button>
 </header>
 
@@ -205,6 +208,7 @@
       <progress id="prog" value="0" max="1" hidden></progress>
       <span class="sp"></span>
       <button id="clear" type="button" disabled data-t="clearAll">Clear</button>
+      <button id="toProduct" type="button" disabled hidden data-t="toProduct">Add to a product…</button>
       <a id="zip" class="btn primary" href="#" download aria-disabled="true" style="pointer-events:none;opacity:.5" data-t="zip">Download all (ZIP)</a>
     </div>
     <div class="grid" id="grid"></div>
@@ -265,12 +269,27 @@
   </div>
 </dialog>
 
+<dialog id="pdlg" style="width:min(94vw,760px)" aria-label="Add to a product">
+  <div style="padding:16px;display:flex;flex-direction:column;gap:12px;max-height:88vh">
+    <div style="display:flex;align-items:center;gap:8px"><b data-t="toProductTitle">Add photos to a product</b><span class="sp"></span><button type="button" class="sm" id="pClose" data-t="close">Close</button></div>
+    <p class="hint" data-t="toProductHint">Pick the photos, then the product. They're added after its current photos (up to 10 per product).</p>
+    <div class="grid" id="pPhotos" style="grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px"></div>
+    <input type="text" id="pSearch" data-t-ph="search" placeholder="Search your products">
+    <div id="pList" style="overflow:auto;max-height:36vh;display:flex;flex-direction:column;gap:6px"></div>
+    <p id="pMsg" class="hint" role="status"></p>
+  </div>
+</dialog>
+
 <dialog id="dlg" style="width:min(92vw,1100px)">
   <div class="cmp"><figure><img id="dBefore" alt=""><figcaption data-t="before">Before</figcaption></figure><figure><img id="dAfter" alt=""><figcaption data-t="after">After</figcaption></figure></div>
   <div class="dlg-bar"><button type="button" id="dClose" data-t="close">Close</button></div>
 </dialog>
 
 <script>
+// Inside another site (Rubies, Hydro Alex) the page is served with window.STUDIO_API (where its API lives) and
+// window.STUDIO_EMBED ({ site, back, backLabel, backLabelAr, products, lang, theme }). On its own: "/api", no extras.
+const API = window.STUDIO_API || "/api";
+const EMBED = window.STUDIO_EMBED || null;
 const T = {
   ar: { title: "ستوديو", tagline: "صور منتجات نضيفة ومتناسقة بضغطة", speed: "السرعة", best: "أحسن حواف", fast: "سريع (٦ أضعاف)",
     speedHint: "السريع كويس للمنتجات السادة على خلفية سادة. استخدم الأحسن للشعر والدانتيل والزجاج أو الصور الزحمة.",
@@ -293,16 +312,25 @@ const T = {
     warns: { small: "الصورة صغيرة، فالنتيجة ممكن تبان مش حادة. استخدم ١٠٠٠ بكسل على الأقل في الضلع الصغير.", dark: "الصورة ضلمة. صوّر جنب شباك أو في إضاءة أكتر.",
       blurry: "المنتج باين مش واضح. ثبّت الموبايل أو استخدم ستاند، ودوس على المنتج عشان يعمل فوكس.", cut: "المنتج لامس طرف الصورة، فممكن جزء منه يكون مقطوع. سيب مسافة حواليه.",
       unclear: "ماقدرناش نحدد المنتج كويس. استخدم خلفية سادة بلون مختلف عن المنتج." },
-    errs: { too_big: "الصورة كبيرة أوي.", not_image: "ده مش ملف صورة." } },
+    errs: { too_big: "الصورة كبيرة أوي.", not_image: "ده مش ملف صورة.", studio_limit: "وصلت لحد الصور النهارده. جرّب بكرة." },
+    toProduct: "ضيف لمنتج…", toProductTitle: "ضيف الصور لمنتج", toProductHint: "اختار الصور وبعدين المنتج. هتتضاف بعد صوره الحالية (لحد ١٠ صور للمنتج).",
+    search: "دوّر في منتجاتك", add: "ضيف", added: "اتضافت", openProduct: "افتح المنتج", full: "المنتج ده فيه ١٠ صور خلاص.", none: "لسه مفيش منتجات.",
+    photosCount: "صورة" },
 };
 let lang = "en";
-try { lang = localStorage.getItem("studio-lang") || "en"; } catch {}
+try { lang = localStorage.getItem("studio-lang") || EMBED?.lang || "en"; } catch { lang = EMBED?.lang || "en"; }
 const EN = {};
 document.querySelectorAll("[data-t]").forEach((el) => (EN[el.dataset.t] = el.textContent));
+// Inside a site the photos go to that site's server (kept 24 hours), so don't promise they stay on this computer.
+EN.drop2Site = "or click to choose, or paste. JPG, PNG, WebP or iPhone (HEIC). Kept for 24 hours, only you can see them.";
+T.ar.drop2Site = "أو دوس واختار، أو الصق. JPG أو PNG أو WebP أو صور الآيفون (HEIC). بتتحفظ 24 ساعة وانت بس اللي تشوفها.";
+if (window.STUDIO_EMBED?.site) document.querySelector("[data-t=drop2]").dataset.t = "drop2Site";
 const tr = (k, en) => (lang === "ar" && T.ar[k]) || en || EN[k] || k;
 function applyLang() {
   document.documentElement.lang = lang; document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
   document.querySelectorAll("[data-t]").forEach((el) => (el.textContent = lang === "ar" ? (T.ar[el.dataset.t] ?? EN[el.dataset.t]) : EN[el.dataset.t]));
+  document.querySelectorAll("[data-t-ph]").forEach((el) => (el.placeholder = tr(el.dataset.tPh, el.dataset.enPh || (el.dataset.enPh = el.placeholder))));
+  if (EMBED?.back) { $("back").hidden = false; $("back").href = EMBED.back; $("back").textContent = (lang === "ar" ? "→ " : "← ") + (lang === "ar" ? EMBED.backLabelAr || EMBED.backLabel : EMBED.backLabel); }
   $("lang").textContent = lang === "ar" ? "EN" : "ع";
   logoState(); render();
 }
@@ -356,14 +384,14 @@ async function renderOne(it, preview = false) {
   for (const [k, v] of Object.entries(s)) fd.append(k, String(v));
   fd.append("edits", JSON.stringify(it.edits));
   const tb = await touchBlob(it); if (tb) fd.append("touch", tb, "touch.png");
-  const r = await fetch("/api/render", { method: "POST", body: fd });
+  const r = await fetch(`${API}/render`, { method: "POST", body: fd });
   if (preview) { if (!r.ok) throw new Error("failed"); return URL.createObjectURL(await r.blob()); }
   const j = await r.json(); if (!r.ok) throw new Error(j.detail || "failed");
   return { ...j, url: j.url + "?v=" + Date.now() };
 }
 async function upload(it) {
   const fd = new FormData(); fd.append("file", it.file); fd.append("job", job); fd.append("model", settings().model);
-  const r = await fetch("/api/photos", { method: "POST", body: fd }); const j = await r.json();
+  const r = await fetch(`${API}/photos`, { method: "POST", body: fd }); const j = await r.json();
   if (!r.ok) throw new Error(j.detail || "failed");
   it.id = j.id; it.preview = j.preview; it.w = j.width; it.h = j.height;
 }
@@ -390,11 +418,11 @@ $("clear").onclick = async () => { items.splice(0); job = newJob(); lastRendered
 $("logoPick").onclick = () => $("logoFile").click();
 async function sendLogo(f) {
   const fd = new FormData(); fd.append("job", job); fd.append("file", f);
-  const r = await fetch("/api/logo", { method: "POST", body: fd });
+  const r = await fetch(`${API}/logo`, { method: "POST", body: fd });
   logoOn = r.ok; logoFile = r.ok ? f : null; logoState(); render();
 }
 $("logoFile").onchange = async (e) => { const f = e.target.files[0]; e.target.value = ""; if (f) await sendLogo(f); };
-$("logoRemove").onclick = async () => { await fetch(`/api/logo/${job}`, { method: "DELETE" }); logoOn = false; logoFile = null; logoState(); render(); };
+$("logoRemove").onclick = async () => { await fetch(`${API}/logo/${job}`, { method: "DELETE" }); logoOn = false; logoFile = null; logoState(); render(); };
 function logoState() { $("logoState").textContent = logoOn ? tr("logoOn", "The logo will be stamped on every photo.") : tr("logoNone"); $("logoOpts").hidden = !logoOn; $("logoRemove").hidden = !logoOn; }
 
 // ------------------------------------------------------------------ the grid
@@ -408,7 +436,8 @@ function updateBar() {
   $("again").disabled = !items.length || busy; $("again").classList.toggle("changed", !!changed);
   $("again").textContent = changed ? tr("changed", "Settings changed: apply to all") : tr("again");
   const zip = $("zip"), ok = done > 0 && !busy;
-  zip.href = ok ? `/api/jobs/${job}.zip` : "#"; zip.style.pointerEvents = ok ? "" : "none"; zip.style.opacity = ok ? "" : ".5"; zip.setAttribute("aria-disabled", ok ? "false" : "true");
+  $("toProduct").hidden = !EMBED?.products; $("toProduct").disabled = !ok;
+  zip.href = ok ? `${API}/jobs/${job}.zip` : "#"; zip.style.pointerEvents = ok ? "" : "none"; zip.style.opacity = ok ? "" : ".5"; zip.setAttribute("aria-disabled", ok ? "false" : "true");
 }
 function render() {
   updateBar();
@@ -447,7 +476,7 @@ async function openEditor(i) {
   if (it.touch) E.touch.getContext("2d").drawImage(it.touch, 0, 0, nat.w, nat.h);
   const can = $("eCan"); can.width = nat.w; can.height = nat.h;
   // the red overlay: everything the AI thinks is background
-  const m = new Image(); m.src = `/api/photos/${job}/${it.id}/mask.png?model=${settings().model}&v=${Date.now()}`;
+  const m = new Image(); m.src = `${API}/photos/${job}/${it.id}/mask.png?model=${settings().model}&v=${Date.now()}`;
   await m.decode().catch(() => {});
   const oc = document.createElement("canvas"); oc.width = nat.w; oc.height = nat.h; const ox = oc.getContext("2d");
   ox.drawImage(m, 0, 0, nat.w, nat.h); const d = ox.getImageData(0, 0, nat.w, nat.h);
@@ -562,7 +591,46 @@ async function preview() {
 }
 $("ed").addEventListener("close", () => { E = null; });
 
-fetch("/api/status").then((r) => r.json()).then((s) => { if (!s.model_ready) { $("notice").textContent = tr("noModel", "The background model isn't downloaded yet. Run ./run.sh once to get it."); $("notice").style.display = "block"; } if (!s.models?.fast) document.querySelector("input[name=model][value=fast]").closest("label").hidden = true; }).catch(() => {});
+// ------------------------------------------------------------------ inside a site: add photos to a product
+if (EMBED?.theme && EMBED.theme !== "system") document.documentElement.dataset.theme = EMBED.theme;
+if (EMBED?.site) { document.title = `${EMBED.site} · Studio`; }
+let products = [];
+async function openProducts() {
+  const done = items.filter((i) => i.state === "done");
+  $("pPhotos").innerHTML = done.map((it) => `<label class="card" style="overflow:hidden;cursor:pointer;display:block;position:relative">
+    <img src="${it.result.url}" alt="" style="width:100%;aspect-ratio:1/1;object-fit:contain;display:block;background:var(--s2)">
+    <input type="checkbox" checked data-file="${esc(it.result.name)}" style="position:absolute;top:6px;inset-inline-start:6px;width:18px;height:18px;accent-color:var(--accent)"></label>`).join("");
+  $("pMsg").textContent = ""; $("pSearch").value = "";
+  $("pdlg").showModal();
+  try { products = (await (await fetch(`${API}/products`)).json()).products || []; } catch { products = []; }
+  listProducts();
+}
+function listProducts() {
+  const q = $("pSearch").value.trim().toLowerCase();
+  const rows = products.filter((p) => !q || p.name.toLowerCase().includes(q));
+  $("pList").innerHTML = rows.length ? rows.map((p) => `<div class="card" style="display:flex;align-items:center;gap:10px;padding:8px" data-testid="product-row">
+    ${p.image ? `<img src="${esc(p.image)}" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:8px">` : `<span style="width:44px;height:44px;border-radius:8px;background:var(--s2)"></span>`}
+    <span style="flex:1;min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</b><span class="hint" dir="ltr">${p.photos}/10</span></span>
+    <button type="button" class="sm primary" data-pid="${p.id}" ${p.photos >= 10 ? "disabled" : ""}>${esc(p.photos >= 10 ? tr("full", "Already has 10 photos") : tr("add", "Add"))}</button></div>`).join("")
+    : `<p class="hint">${esc(tr("none", "No products yet."))}</p>`;
+}
+$("toProduct").onclick = openProducts;
+$("pClose").onclick = () => $("pdlg").close();
+$("pSearch").oninput = listProducts;
+$("pList").addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-pid]"); if (!b) return;
+  const files = [...$("pPhotos").querySelectorAll("input:checked")].map((x) => x.dataset.file);
+  if (!files.length) return;
+  b.disabled = true;
+  const fd = new FormData(); fd.append("job", job); fd.append("product_id", b.dataset.pid); files.forEach((f) => fd.append("files", f));
+  const r = await fetch(`${API}/to-product`, { method: "POST", body: fd }); const j = await r.json().catch(() => ({}));
+  if (!r.ok) { $("pMsg").textContent = tr("failed", "Couldn't add them") + (j.detail ? ` (${j.detail})` : ""); b.disabled = false; return; }
+  const p = products.find((x) => String(x.id) === b.dataset.pid); if (p) p.photos = j.photos;
+  listProducts();
+  $("pMsg").innerHTML = `${esc(tr("added", "Added"))}: ${j.added} ${esc(tr("photosCount", "photo(s)"))}${j.skipped ? ` (${j.skipped}: ${esc(tr("full", "10 photos is the most"))})` : ""} · <a href="${esc(j.link)}" data-testid="open-product">${esc(tr("openProduct", "Open the product"))}</a>`;
+});
+
+fetch(`${API}/status`).then((r) => r.json()).then((s) => { if (!s.model_ready) { $("notice").textContent = tr("noModel", "The background model isn't downloaded yet. Run ./run.sh once to get it."); $("notice").style.display = "block"; } if (!s.models?.fast) document.querySelector("input[name=model][value=fast]").closest("label").hidden = true; }).catch(() => {});
 applyLang();
 </script>
 </body>
