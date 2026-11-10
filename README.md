@@ -79,14 +79,4 @@ Which file type: **WebP** is the smallest and right for the websites. **JPG** fo
 - The second runs the tests: a clean white result, see-through and tall shapes, the warnings, bad input, every
   editor tool (crop, rotate, colors, the brush, logo, own size) and that Fast really is faster.
 
-## How it works (for later, when it moves into Rubies or Hydro)
-
-- `studio/pipeline.py`: three steps. `load()` opens a photo, `mask()` is the AI step (run once, keep the result),
-  `render(img, mask, Options(...), Edits(...), Logo(...))` makes the finished photo. `process()` does all three.
-  Needs only
-  `onnxruntime`, `numpy` and `pillow` (plus `pillow-heif` for iPhone photos) and the model file in `models/`.
-  Models: ISNet "general use" (Best, 1024 x 1024) and U2Net-P (Fast, 320 x 320), both from the rembg project.
-- `studio/web.py`: the page's small API. `studio/cli.py`: the folder cleaner.
-- To merge: copy `pipeline.py` into the site's `backend/app/services/`, call `process()` after an upload (in the
-  background, since each photo takes a few seconds), and add a per-shop switch "clean my photos". The website side
-  only needs a "cleaning..." state on the photo.
+oto.
