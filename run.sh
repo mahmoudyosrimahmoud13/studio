@@ -6,9 +6,13 @@ ROOT="$(pwd)"
 PY="$ROOT/.venv/bin/python"
 PORT="${STUDIO_PORT:-8300}"
 PIDFILE="$ROOT/.studio.pid"
-MODEL="$ROOT/models/isnet-general-use.onnx"
-MODEL_URL="https://github.com/danielgatis/rembg/releases/download/v0.0.0/isnet-general-use.onnx"
-MODEL_SHA="60920e99c45464f2ba57bee2ad08c919a52bbf852739e96947fbb4358c0d964a"
+# The two background models (from the rembg project's releases) and their fingerprints, so a broken or swapped
+# download is never used. "best" is 170 MB, "fast" is 4.5 MB.
+MODELS=(
+  "isnet-general-use.onnx 60920e99c45464f2ba57bee2ad08c919a52bbf852739e96947fbb4358c0d964a"
+  "u2netp.onnx 309c8469258dda742793dce0ebea8e6dd393174f89934733ecc8b14c76f4ddd8"
+)
+MODEL_BASE="https://github.com/danielgatis/rembg/releases/download/v0.0.0"
 
 say()  { printf "\n\033[1;31m◆\033[0m \033[1m%s\033[0m\n" "$1"; }
 ok()   { printf "  \033[32m✓\033[0m %s\n" "$1"; }
@@ -47,14 +51,18 @@ setup() {
     touch .venv/.installed
   fi
   ok "Libraries ready"
-  if [ ! -f "$MODEL" ] || [ "$(sha256sum "$MODEL" | cut -d' ' -f1)" != "$MODEL_SHA" ]; then
-    echo "  Downloading the background model (about 170 MB, one time only)…"
-    mkdir -p "$ROOT/models"
-    curl -fL --progress-bar -o "$MODEL.part" "$MODEL_URL" || fail "The download failed. Check the internet connection and run ./run.sh again."
-    [ "$(sha256sum "$MODEL.part" | cut -d' ' -f1)" = "$MODEL_SHA" ] || { rm -f "$MODEL.part"; fail "The downloaded model isn't the expected file, so it was deleted. Try again."; }
-    mv "$MODEL.part" "$MODEL"
-  fi
-  ok "Background model ready"
+  mkdir -p "$ROOT/models"
+  local m file sha path
+  for m in "${MODELS[@]}"; do
+    file="${m%% *}"; sha="${m##* }"; path="$ROOT/models/$file"
+    if [ ! -f "$path" ] || [ "$(sha256sum "$path" | cut -d' ' -f1)" != "$sha" ]; then
+      echo "  Downloading the background model $file (one time only)…"
+      curl -fL --progress-bar -o "$path.part" "$MODEL_BASE/$file" || fail "The download failed. Check the internet connection and run ./run.sh again."
+      [ "$(sha256sum "$path.part" | cut -d' ' -f1)" = "$sha" ] || { rm -f "$path.part"; fail "The downloaded model isn't the expected file, so it was deleted. Try again."; }
+      mv "$path.part" "$path"
+    fi
+  done
+  ok "Background models ready"
 }
 
 CMD="start"; BG=0; HOST="127.0.0.1"

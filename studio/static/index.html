@@ -6,72 +6,92 @@
 <title>Studio</title>
 <style>
   :root { --bg:#F6F4F1; --surface:#fff; --s2:#F0EDE8; --ink:#1C1917; --muted:#6B645D; --line:#E4DFD8; --accent:#9F1239;
-          --accent-soft:#FCE7EC; --ok:#065F46; --ok-bg:#ECFDF5; --warn:#92400E; --warn-bg:#FFFBEB; --bad:#991B1B;
-          --checker: #e9e6e1; }
+          --accent-soft:#FCE7EC; --warn:#92400E; --warn-bg:#FFFBEB; --bad:#991B1B; --checker:#e9e6e1; --keep:#16a34a; --remove:#dc2626; }
   @media (prefers-color-scheme: dark) {
     :root { --bg:#161413; --surface:#1F1C1B; --s2:#2A2624; --ink:#F2EEEA; --muted:#A9A19A; --line:#38322F; --accent:#F43F5E;
-            --accent-soft:#3B1520; --ok:#6EE7B7; --ok-bg:#062E22; --warn:#FCD34D; --warn-bg:#3A2A05; --bad:#FCA5A5; --checker:#2e2a28; }
+            --accent-soft:#3B1520; --warn:#FCD34D; --warn-bg:#3A2A05; --bad:#FCA5A5; --checker:#2e2a28; }
   }
-  * { box-sizing: border-box; }
+  * { box-sizing:border-box; }
+  [hidden] { display:none !important; }
   body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 system-ui, -apple-system, "Segoe UI", "Noto Sans Arabic", Tahoma, sans-serif; }
-  header { display:flex; align-items:center; gap:12px; padding:14px 20px; border-bottom:1px solid var(--line); background:var(--surface); position:sticky; top:0; z-index:5; }
-  header h1 { font-size:18px; margin:0; letter-spacing:.2px; }
+  header { display:flex; align-items:center; gap:12px; padding:12px 20px; border-bottom:1px solid var(--line); background:var(--surface); position:sticky; top:0; z-index:5; }
+  header h1 { font-size:18px; margin:0; }
   header .sub { color:var(--muted); font-size:13px; }
-  header .sp { flex:1; }
-  button, .btn { font:inherit; border-radius:10px; border:1px solid var(--line); background:var(--surface); color:var(--ink); padding:8px 14px; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
+  .sp { flex:1; }
+  button, .btn { font:inherit; border-radius:10px; border:1px solid var(--line); background:var(--surface); color:var(--ink); padding:8px 14px; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:6px; }
   button:hover, .btn:hover { background:var(--s2); }
   .primary { background:var(--accent); border-color:var(--accent); color:#fff; }
   .primary:hover { filter:brightness(1.08); background:var(--accent); }
+  .sm { padding:5px 10px; font-size:12.5px; border-radius:8px; }
   button:disabled { opacity:.5; cursor:default; }
-  main { display:grid; grid-template-columns: 320px 1fr; gap:20px; padding:20px; max-width:1400px; margin:0 auto; }
-  @media (max-width: 860px) { main { grid-template-columns: 1fr; padding:14px; } }
+  main { display:grid; grid-template-columns:330px 1fr; gap:20px; padding:20px; max-width:1440px; margin:0 auto; }
+  @media (max-width:900px) { main { grid-template-columns:1fr; padding:14px; } }
   .card { background:var(--surface); border:1px solid var(--line); border-radius:14px; }
-  aside.card { padding:16px; align-self:start; position:sticky; top:72px; }
-  @media (max-width: 860px) { aside.card { position:static; } }
-  .field { margin-bottom:14px; }
-  .label { font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; display:block; }
+  aside.card { padding:16px; align-self:start; position:sticky; top:68px; max-height:calc(100vh - 88px); overflow:auto; }
+  @media (max-width:900px) { aside.card { position:static; max-height:none; } }
+  details.sec { border-top:1px solid var(--line); padding-top:10px; margin-top:6px; }
+  details.sec > summary { cursor:pointer; font-weight:600; font-size:13.5px; list-style:none; display:flex; justify-content:space-between; }
+  details.sec > summary::after { content:"+"; color:var(--muted); }
+  details.sec[open] > summary::after { content:"–"; }
+  .field { margin:10px 0 12px; }
+  .label { font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; display:flex; justify-content:space-between; }
   .chips { display:flex; flex-wrap:wrap; gap:6px; }
   .chips label { cursor:pointer; }
   .chips input { position:absolute; opacity:0; pointer-events:none; }
-  .chips span { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); border-radius:999px; padding:5px 11px; font-size:13px; background:var(--surface); }
-  .chips input:checked + span { border-color:var(--accent); background:var(--accent-soft); color:var(--ink); font-weight:600; }
+  .chips span { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); border-radius:999px; padding:4px 11px; font-size:13px; background:var(--surface); }
+  .chips input:checked + span { border-color:var(--accent); background:var(--accent-soft); font-weight:600; }
   .chips input:focus-visible + span { outline:2px solid var(--accent); outline-offset:2px; }
   .sw { width:14px; height:14px; border-radius:50%; border:1px solid var(--line); display:inline-block; }
   input[type=range] { width:100%; accent-color:var(--accent); }
-  input[type=color] { width:30px; height:26px; border:0; padding:0; background:none; cursor:pointer; vertical-align:middle; }
-  .row { display:flex; align-items:center; gap:8px; }
+  input[type=color] { width:28px; height:24px; border:0; padding:0; background:none; cursor:pointer; vertical-align:middle; }
+  input[type=text] { width:100%; font:inherit; border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:10px; padding:7px 10px; }
   .toggle { display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer; margin:6px 0; }
   .toggle input { width:16px; height:16px; accent-color:var(--accent); }
   .hint { color:var(--muted); font-size:12.5px; }
-  #drop { border:2px dashed var(--line); border-radius:14px; padding:36px 20px; text-align:center; background:var(--surface); cursor:pointer; transition:.15s; }
+  .changed { outline:2px solid var(--accent); }
+  #drop { border:2px dashed var(--line); border-radius:14px; padding:30px 20px; text-align:center; background:var(--surface); cursor:pointer; }
   #drop.over { border-color:var(--accent); background:var(--accent-soft); }
   #drop b { font-size:17px; display:block; margin-bottom:4px; }
   .bar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:16px 0; }
-  .bar .sp { flex:1; }
   progress { width:180px; accent-color:var(--accent); }
   .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px; }
   .item { overflow:hidden; display:flex; flex-direction:column; }
-  .pic { position:relative; aspect-ratio:1/1; background:repeating-conic-gradient(var(--checker) 0 25%, transparent 0 50%) 0 0/20px 20px; display:grid; place-items:center; cursor:zoom-in; user-select:none; }
+  .pic { position:relative; aspect-ratio:1/1; background:repeating-conic-gradient(var(--checker) 0 25%, transparent 0 50%) 0 0/20px 20px; display:grid; place-items:center; cursor:pointer; }
   .pic img { max-width:100%; max-height:100%; display:block; }
-  .pic .tag { position:absolute; top:8px; inset-inline-start:8px; background:rgba(0,0,0,.6); color:#fff; font-size:11px; padding:2px 8px; border-radius:999px; }
-  .pic .spin { width:28px; height:28px; border:3px solid var(--line); border-top-color:var(--accent); border-radius:50%; animation:s 1s linear infinite; }
+  .pic .tag { position:absolute; top:8px; inset-inline-start:8px; background:rgba(0,0,0,.62); color:#fff; font-size:11px; padding:2px 8px; border-radius:999px; }
+  .spin { width:28px; height:28px; border:3px solid var(--line); border-top-color:var(--accent); border-radius:50%; animation:s 1s linear infinite; }
   @keyframes s { to { transform:rotate(360deg); } }
   .meta { padding:10px 12px; display:flex; flex-direction:column; gap:6px; font-size:13px; }
   .meta .name { font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .meta .acts { display:flex; gap:6px; flex-wrap:wrap; }
-  .meta .acts .btn, .meta .acts button { padding:5px 10px; font-size:12.5px; }
+  .acts { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
   .warn { background:var(--warn-bg); color:var(--warn); border-radius:8px; padding:5px 8px; font-size:12px; }
   .err { color:var(--bad); font-size:12.5px; }
   .empty { color:var(--muted); text-align:center; padding:30px; }
   .notice { margin:0 0 14px; padding:10px 12px; border-radius:10px; background:var(--warn-bg); color:var(--warn); font-size:13.5px; display:none; }
-  dialog { border:0; border-radius:14px; padding:0; max-width:min(92vw, 1100px); background:var(--surface); color:var(--ink); }
-  dialog::backdrop { background:rgba(0,0,0,.6); }
+  dialog { border:0; border-radius:16px; padding:0; width:min(96vw, 1280px); max-height:94vh; background:var(--surface); color:var(--ink); }
+  dialog::backdrop { background:rgba(0,0,0,.62); }
+  .ed { display:grid; grid-template-columns:1.25fr 1fr 290px; gap:0; height:min(86vh, 760px); }
+  @media (max-width:1000px) { .ed { grid-template-columns:1fr; height:auto; } }
+  .ed .pane { display:flex; flex-direction:column; min-height:0; border-inline-end:1px solid var(--line); }
+  .ed .pane h3 { margin:0; padding:10px 14px; font-size:13px; color:var(--muted); display:flex; gap:8px; align-items:center; border-bottom:1px solid var(--line); }
+  .stage { flex:1; min-height:280px; display:grid; place-items:center; padding:10px; background:repeating-conic-gradient(var(--checker) 0 25%, var(--surface) 0 50%) 0 0/20px 20px; position:relative; overflow:hidden; }
+  .stage .wrap { position:relative; line-height:0; }
+  .stage img { max-width:100%; max-height:min(68vh, 620px); display:block; user-select:none; -webkit-user-drag:none; }
+  .stage canvas { position:absolute; inset:0; width:100%; height:100%; touch-action:none; }
+  .tools { padding:12px 14px; overflow:auto; display:flex; flex-direction:column; gap:10px; }
+  .tools .row { display:flex; gap:6px; flex-wrap:wrap; }
+  .slider { display:grid; grid-template-columns:96px 1fr 34px; align-items:center; gap:8px; font-size:13px; }
+  .slider output { color:var(--muted); font-size:12px; text-align:end; }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .seg button { border:0; border-radius:0; padding:5px 10px; font-size:12.5px; }
+  .seg button.on { background:var(--accent); color:#fff; }
+  .ed-foot { display:flex; gap:8px; justify-content:flex-end; padding:10px 14px; border-top:1px solid var(--line); }
   .cmp { display:grid; grid-template-columns:1fr 1fr; gap:2px; background:var(--line); }
   .cmp figure { margin:0; background:repeating-conic-gradient(var(--checker) 0 25%, var(--surface) 0 50%) 0 0/20px 20px; display:flex; flex-direction:column; }
   .cmp img { width:100%; height:min(70vh, 520px); object-fit:contain; display:block; }
   .cmp figcaption { padding:6px 10px; font-size:12px; color:var(--muted); background:var(--surface); }
   .dlg-bar { display:flex; justify-content:flex-end; padding:8px; gap:8px; }
-  @media (max-width: 600px) { .cmp { grid-template-columns:1fr; } .cmp img { height:38vh; } }
+  @media (max-width:600px) { .cmp { grid-template-columns:1fr; } .cmp img { height:38vh; } }
 </style>
 </head>
 <body>
@@ -83,10 +103,18 @@
 </header>
 
 <main>
-  <aside class="card" aria-label="Settings">
+  <aside class="card" aria-label="Settings" id="settings">
+    <div class="field" style="margin-top:0">
+      <span class="label" data-t="speed">Speed</span>
+      <div class="chips">
+        <label><input type="radio" name="model" value="best" checked><span data-t="best">Best edges</span></label>
+        <label><input type="radio" name="model" value="fast"><span data-t="fast">Fast (6x)</span></label>
+      </div>
+      <p class="hint" data-t="speedHint">Fast is good for plain products on plain backgrounds. Use Best for hair, lace, glass or busy photos.</p>
+    </div>
     <div class="field">
       <span class="label" data-t="bg">Background</span>
-      <div class="chips" id="bgChips">
+      <div class="chips">
         <label><input type="radio" name="bg" value="#FFFFFF" checked><span><i class="sw" style="background:#fff"></i><b data-t="white">White</b></span></label>
         <label><input type="radio" name="bg" value="#F4F2EF"><span><i class="sw" style="background:#F4F2EF"></i><b data-t="soft">Soft gray</b></span></label>
         <label><input type="radio" name="bg" value="custom"><span><input type="color" id="bgColor" value="#F3E8E3" aria-label="Color"><b data-t="color">Color</b></span></label>
@@ -102,8 +130,8 @@
       </div>
     </div>
     <div class="field">
-      <span class="label"><span data-t="fill">Product size</span> <span id="fillVal" class="hint">82%</span></span>
-      <input type="range" id="fill" min="60" max="95" value="82">
+      <span class="label"><span data-t="fill">Product size</span><span id="fillVal" class="hint" dir="ltr">82%</span></span>
+      <input type="range" id="fill" min="50" max="95" value="82">
     </div>
     <div class="field">
       <span class="label" data-t="place">Position</span>
@@ -131,14 +159,45 @@
       </div>
       <p class="hint" data-t="fmtHint">WebP is smallest and works on every modern browser. Use JPG for WhatsApp or older apps.</p>
     </div>
-    <button id="again" type="button" disabled style="width:100%" data-t="again">Redo all with these settings</button>
+
+    <details class="sec">
+      <summary data-t="namesTitle">File names</summary>
+      <div class="field">
+        <input type="text" id="prefix" maxlength="40" placeholder="NM-102" aria-label="Name">
+        <p class="hint" data-t="namesHint">Type a product code to name the photos NM-102-1, NM-102-2… in the order shown. Leave empty to keep the original names.</p>
+      </div>
+    </details>
+
+    <details class="sec">
+      <summary data-t="logoTitle">Logo on photos</summary>
+      <div class="field">
+        <div class="row" style="display:flex;gap:6px;flex-wrap:wrap">
+          <button type="button" class="sm" id="logoPick" data-t="logoPick">Choose logo…</button>
+          <button type="button" class="sm" id="logoRemove" hidden data-t="logoRemove">Remove logo</button>
+          <input type="file" id="logoFile" accept="image/png,image/webp,image/jpeg,image/svg+xml" hidden>
+        </div>
+        <p class="hint" id="logoState" data-t="logoNone">No logo. A see-through PNG looks best.</p>
+        <div id="logoOpts" hidden>
+          <span class="label" data-t="logoWhere">Where</span>
+          <div class="chips">
+            <label><input type="radio" name="lpos" value="br" checked><span data-t="br">Bottom corner</span></label>
+            <label><input type="radio" name="lpos" value="tr"><span data-t="tr">Top corner</span></label>
+            <label><input type="radio" name="lpos" value="center"><span data-t="mid">Middle</span></label>
+          </div>
+          <span class="label" style="margin-top:8px"><span data-t="logoSize">Size</span></span><input type="range" id="lscale" min="6" max="40" value="18">
+          <span class="label"><span data-t="logoFade">Strength</span></span><input type="range" id="lop" min="15" max="100" value="85">
+        </div>
+      </div>
+    </details>
+
+    <button id="again" type="button" disabled style="width:100%;margin-top:12px" data-t="again">Apply these settings to all</button>
   </aside>
 
   <section>
     <p class="notice" id="notice"></p>
     <div id="drop" tabindex="0" role="button" aria-label="Add photos">
       <b data-t="drop">Drop product photos here</b>
-      <span class="hint" data-t="drop2">or click to choose. JPG, PNG, WebP or iPhone (HEIC). Nothing leaves this computer.</span>
+      <span class="hint" data-t="drop2">or click to choose, or paste. JPG, PNG, WebP or iPhone (HEIC). Nothing leaves this computer.</span>
       <input id="pick" type="file" accept="image/*,.heic,.heif" multiple hidden>
     </div>
     <div class="bar">
@@ -148,59 +207,136 @@
       <button id="clear" type="button" disabled data-t="clearAll">Clear</button>
       <a id="zip" class="btn primary" href="#" download aria-disabled="true" style="pointer-events:none;opacity:.5" data-t="zip">Download all (ZIP)</a>
     </div>
-    <div class="grid" id="grid"><p class="empty" data-t="empty">Your cleaned photos will show here.</p></div>
+    <div class="grid" id="grid"></div>
   </section>
 </main>
 
-<dialog id="dlg">
+<dialog id="ed" aria-label="Edit photo">
+  <div class="ed">
+    <div class="pane">
+      <h3><span data-t="photo">Photo</span><span class="sp"></span>
+        <span class="seg" role="tablist"><button type="button" id="tCrop" class="on" data-t="crop">Crop</button><button type="button" id="tTouch" data-t="touch">Touch up</button></span></h3>
+      <div class="stage"><div class="wrap"><img id="eImg" alt=""><canvas id="eCan"></canvas></div></div>
+      <div class="tools" id="cropTools">
+        <div class="row"><span class="hint" data-t="cropHint">Drag on the photo to choose what to keep. Drag inside the box to move it, or a corner to resize.</span></div>
+        <div class="row">
+          <span class="seg" id="ratio"><button type="button" class="on" data-r="0" data-t="free">Free</button><button type="button" data-r="1">1:1</button><button type="button" data-r="0.8">4:5</button></span>
+          <button type="button" class="sm" id="cropClear" data-t="cropClear">No crop</button>
+        </div>
+      </div>
+      <div class="tools" id="touchTools" hidden>
+        <div class="row"><span class="hint" data-t="touchHint">Red shows what will be removed. Paint with Keep over parts that went missing, or Remove over leftovers.</span></div>
+        <div class="row">
+          <span class="seg" id="brush"><button type="button" class="on" data-b="keep" data-t="keep">Keep</button><button type="button" data-b="remove" data-t="remove">Remove</button><button type="button" data-b="erase" data-t="erase">Undo paint</button></span>
+          <button type="button" class="sm" id="touchClear" data-t="touchClear">Clear paint</button>
+        </div>
+        <div class="slider"><span data-t="brushSize">Brush</span><input type="range" id="bsize" min="4" max="120" value="28"><output id="bsizeV">28</output></div>
+      </div>
+    </div>
+    <div class="pane">
+      <h3><span data-t="result">Result</span><span class="sp"></span><span id="eBusy" class="hint" hidden>…</span></h3>
+      <div class="stage"><img id="ePrev" alt=""></div>
+      <div class="tools"><div id="eWarn"></div></div>
+    </div>
+    <div class="pane" style="border:0">
+      <h3 data-t="adjust">Adjust</h3>
+      <div class="tools">
+        <div class="row">
+          <button type="button" class="sm" id="rotL" aria-label="Rotate left">⟲</button>
+          <button type="button" class="sm" id="rotR" aria-label="Rotate right">⟳</button>
+          <button type="button" class="sm" id="flip" data-t="flip">Mirror</button>
+        </div>
+        <div class="slider"><span data-t="straighten">Straighten</span><input type="range" id="s_straighten" min="-20" max="20" step="0.5" value="0"><output></output></div>
+        <div class="slider"><span data-t="brightness">Brightness</span><input type="range" id="s_brightness" min="-100" max="100" value="0"><output></output></div>
+        <div class="slider"><span data-t="contrast">Contrast</span><input type="range" id="s_contrast" min="-100" max="100" value="0"><output></output></div>
+        <div class="slider"><span data-t="saturation">Color</span><input type="range" id="s_saturation" min="-100" max="100" value="0"><output></output></div>
+        <div class="slider"><span data-t="warmth">Warmth</span><input type="range" id="s_warmth" min="-100" max="100" value="0"><output></output></div>
+        <div class="slider"><span data-t="sharpness">Sharpness</span><input type="range" id="s_sharpness" min="-100" max="100" value="0"><output></output></div>
+        <label class="toggle"><input type="checkbox" id="ownFill"><span data-t="ownFill">Own product size</span></label>
+        <div class="slider" id="ownFillRow" hidden><span data-t="fill">Product size</span><input type="range" id="s_fill" min="50" max="95" value="82"><output></output></div>
+      </div>
+      <div class="ed-foot">
+        <button type="button" id="eReset" data-t="reset">Reset</button>
+        <span class="sp"></span>
+        <button type="button" id="eCancel" data-t="cancel">Cancel</button>
+        <button type="button" id="eSave" class="primary" data-t="save">Save</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="dlg" style="width:min(92vw,1100px)">
   <div class="cmp"><figure><img id="dBefore" alt=""><figcaption data-t="before">Before</figcaption></figure><figure><img id="dAfter" alt=""><figcaption data-t="after">After</figcaption></figure></div>
   <div class="dlg-bar"><button type="button" id="dClose" data-t="close">Close</button></div>
 </dialog>
 
 <script>
 const T = {
-  ar: { title: "ستوديو", tagline: "صور منتجات نضيفة ومتناسقة بضغطة", bg: "الخلفية", white: "أبيض", soft: "رمادي فاتح", color: "لون", clear: "شفافة",
-    shape: "الشكل", square: "مربع", portrait: "طولي ٤:٥ (هدوم)", original: "زي الصورة", fill: "حجم المنتج", place: "المكان", center: "في النص",
-    floor: "واقف على الأرض", removeBg: "شيل الخلفية", shadow: "ظل خفيف تحت المنتج", enhance: "ظبّط الإضاءة والألوان", output: "الملف",
-    fmtHint: "WebP أصغر حجم وبيشتغل على كل المتصفحات الحديثة. استخدم JPG للواتساب أو البرامج القديمة.", again: "أعد الكل بالإعدادات دي",
-    drop: "اسحب صور المنتجات هنا", drop2: "أو دوس واختار. JPG أو PNG أو WebP أو صور الآيفون (HEIC). مفيش حاجة بتخرج من الكمبيوتر ده.",
+  ar: { title: "ستوديو", tagline: "صور منتجات نضيفة ومتناسقة بضغطة", speed: "السرعة", best: "أحسن حواف", fast: "سريع (٦ أضعاف)",
+    speedHint: "السريع كويس للمنتجات السادة على خلفية سادة. استخدم الأحسن للشعر والدانتيل والزجاج أو الصور الزحمة.",
+    bg: "الخلفية", white: "أبيض", soft: "رمادي فاتح", color: "لون", clear: "شفافة", shape: "الشكل", square: "مربع",
+    portrait: "طولي ٤:٥ (هدوم)", original: "زي الصورة", fill: "حجم المنتج", place: "المكان", center: "في النص", floor: "واقف على الأرض",
+    removeBg: "شيل الخلفية", shadow: "ظل خفيف تحت المنتج", enhance: "ظبّط الإضاءة والألوان", output: "الملف",
+    fmtHint: "WebP أصغر حجم وبيشتغل على كل المتصفحات الحديثة. استخدم JPG للواتساب أو البرامج القديمة.",
+    namesTitle: "أسماء الملفات", namesHint: "اكتب كود المنتج عشان الصور تتسمى NM-102-1 و NM-102-2… بالترتيب اللي ظاهر. سيبه فاضي عشان تفضل الأسماء الأصلية.",
+    logoTitle: "لوجو على الصور", logoPick: "اختار لوجو…", logoRemove: "شيل اللوجو", logoNone: "مفيش لوجو. PNG شفاف بيطلع أحسن.", logoOn: "اللوجو هيتحط على كل الصور.",
+    logoWhere: "فين", br: "الركن تحت", tr: "الركن فوق", mid: "في النص", logoSize: "الحجم", logoFade: "الوضوح",
+    again: "طبّق الإعدادات دي على الكل", drop: "اسحب صور المنتجات هنا", drop2: "أو دوس واختار، أو الصق. JPG أو PNG أو WebP أو صور الآيفون (HEIC). مفيش حاجة بتخرج من الكمبيوتر ده.",
     clearAll: "امسح", zip: "نزّل الكل (ZIP)", empty: "الصور بعد التنضيف هتظهر هنا.", before: "قبل", after: "بعد", close: "اقفل",
-    download: "نزّل", compare: "قارن", working: "بنشتغل…", waiting: "مستني", of: "من", photos: "صورة", failed: "ماقدرناش نعدّل الصورة دي",
-    noModel: "نموذج إزالة الخلفية مش موجود لسه. شغّل ./run.sh مرة عشان ينزّله.",
+    download: "نزّل", edit: "عدّل", compare: "قارن", working: "بنشتغل…", waiting: "مستني", finding: "بندوّر على المنتج…", of: "من", photos: "صورة",
+    failed: "ماقدرناش نعدّل الصورة دي", edited: "متعدّلة", photo: "الصورة", crop: "قص", touch: "تظبيط يدوي", result: "النتيجة", adjust: "تعديلات",
+    cropHint: "اسحب على الصورة عشان تختار اللي يفضل. اسحب من جوه المربع عشان تحركه، أو من ركن عشان تكبّره.", free: "حر", cropClear: "من غير قص",
+    touchHint: "الأحمر هو اللي هيتشال. لوّن بـ \"خلّي\" على الأجزاء اللي اتشالت غلط، أو بـ \"شيل\" على البواقي.", keep: "خلّي", remove: "شيل", erase: "امسح التلوين",
+    touchClear: "امسح كل التلوين", brushSize: "الفرشاة", flip: "اعكس", straighten: "عدّل الميل", brightness: "الإضاءة", contrast: "التباين", saturation: "الألوان",
+    warmth: "الدفا", sharpness: "الحدة", ownFill: "حجم خاص للصورة دي", reset: "رجّع زي ما كانت", cancel: "إلغاء", save: "احفظ",
+    changed: "الإعدادات اتغيرت: دوس \"طبّق على الكل\"", noModel: "نموذج إزالة الخلفية مش موجود لسه. شغّل ./run.sh مرة عشان ينزّله.",
     warns: { small: "الصورة صغيرة، فالنتيجة ممكن تبان مش حادة. استخدم ١٠٠٠ بكسل على الأقل في الضلع الصغير.", dark: "الصورة ضلمة. صوّر جنب شباك أو في إضاءة أكتر.",
       blurry: "المنتج باين مش واضح. ثبّت الموبايل أو استخدم ستاند، ودوس على المنتج عشان يعمل فوكس.", cut: "المنتج لامس طرف الصورة، فممكن جزء منه يكون مقطوع. سيب مسافة حواليه.",
       unclear: "ماقدرناش نحدد المنتج كويس. استخدم خلفية سادة بلون مختلف عن المنتج." },
     errs: { too_big: "الصورة كبيرة أوي.", not_image: "ده مش ملف صورة." } },
 };
-let lang = localStorage.getItem("studio-lang") || "en";
-const tr = (k, en) => (lang === "ar" && T.ar[k]) || en;
+let lang = "en";
+try { lang = localStorage.getItem("studio-lang") || "en"; } catch {}
 const EN = {};
 document.querySelectorAll("[data-t]").forEach((el) => (EN[el.dataset.t] = el.textContent));
+const tr = (k, en) => (lang === "ar" && T.ar[k]) || en || EN[k] || k;
 function applyLang() {
   document.documentElement.lang = lang; document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
   document.querySelectorAll("[data-t]").forEach((el) => (el.textContent = lang === "ar" ? (T.ar[el.dataset.t] ?? EN[el.dataset.t]) : EN[el.dataset.t]));
-  document.getElementById("lang").textContent = lang === "ar" ? "EN" : "ع";
-  render();
+  $("lang").textContent = lang === "ar" ? "EN" : "ع";
+  logoState(); render();
 }
-document.getElementById("lang").onclick = () => { lang = lang === "ar" ? "en" : "ar"; try { localStorage.setItem("studio-lang", lang); } catch {} applyLang(); };
-
 const $ = (id) => document.getElementById(id);
+$("lang").onclick = () => { lang = lang === "ar" ? "en" : "ar"; try { localStorage.setItem("studio-lang", lang); } catch {} applyLang(); };
+
+// ------------------------------------------------------------------ state
 const newJob = () => Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => b.toString(16).padStart(2, "0")).join("");
-let job = newJob(); // one folder of results per batch; "Redo" and "Clear" start a new one, so the ZIP has no old copies
-const items = []; // { file, before, state: waiting|working|done|error, result, error }
-let running = false;
+let job = newJob();
+const items = []; // { file, name, id, preview, state: queued|finding|rendering|done|error, result, error, edits, touch (canvas|null) }
+let running = false, logoOn = false, logoFile = null, lastRenderedSettings = "";
+const blankEdits = () => ({ crop: null, rotate: 0, flip: false, straighten: 0, brightness: 0, contrast: 0, saturation: 0, warmth: 0, sharpness: 0, fill: null });
 
 function settings() {
   const pick = (n) => document.querySelector(`input[name=${n}]:checked`).value;
   const bg = pick("bg");
-  return { background: bg === "custom" ? $("bgColor").value : bg, shape: pick("shape"), size: pick("size"), fill: $("fill").value / 100,
-    place: pick("place"), shadow: $("shadow").checked ? "soft" : "none", enhance: $("enhance").checked, remove_background: $("removeBg").checked, fmt: pick("fmt") };
+  return { model: pick("model"), background: bg === "custom" ? $("bgColor").value : bg, shape: pick("shape"), size: pick("size"),
+    fill: $("fill").value / 100, place: pick("place"), shadow: $("shadow").checked ? "soft" : "none", enhance: $("enhance").checked,
+    remove_background: $("removeBg").checked, fmt: pick("fmt"), logo_on: logoOn, logo_position: pick("lpos"),
+    logo_scale: $("lscale").value / 100, logo_opacity: $("lop").value / 100 };
 }
-$("fill").oninput = () => ($("fillVal").textContent = $("fill").value + "%");
-$("bgColor").oninput = () => (document.querySelector('input[name=bg][value=custom]').checked = true);
+const nameFor = (it) => { const p = $("prefix").value.trim(); return p ? `${p}-${items.indexOf(it) + 1}` : it.name; };
 
+$("fill").oninput = () => ($("fillVal").textContent = $("fill").value + "%");
+$("bgColor").oninput = () => (document.querySelector("input[name=bg][value=custom]").checked = true);
+// A setting change only updates the buttons. Redrawing the photos here would swallow a click that lands on a photo
+// right as a text box loses focus.
+$("settings").addEventListener("input", () => updateBar());
+$("settings").addEventListener("change", () => updateBar());
+
+// ------------------------------------------------------------------ adding photos
 function addFiles(list) {
-  for (const f of list) if (f.type.startsWith("image/") || /\.(heic|heif)$/i.test(f.name)) items.push({ file: f, before: URL.createObjectURL(f), state: "waiting" });
+  for (const f of list) if (f.type.startsWith("image/") || /\.(heic|heif)$/i.test(f.name))
+    items.push({ file: f, name: f.name.replace(/\.[^.]+$/, ""), state: "queued", edits: blankEdits(), touch: null });
   render(); run();
 }
 const drop = $("drop");
@@ -210,58 +346,223 @@ $("pick").onchange = (e) => { addFiles(e.target.files); e.target.value = ""; };
 ["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
 ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
 drop.addEventListener("drop", (e) => addFiles(e.dataTransfer.files));
-document.addEventListener("paste", (e) => addFiles([...(e.clipboardData?.files || [])]));
+document.addEventListener("paste", (e) => { if (!$("ed").open) addFiles([...(e.clipboardData?.files || [])]); });
 
+// ------------------------------------------------------------------ talking to the server
+function touchBlob(it) { return new Promise((res) => (it.touch ? it.touch.toBlob(res, "image/png") : res(null))); }
+async function renderOne(it, preview = false) {
+  const s = settings(), fd = new FormData();
+  fd.append("job", job); fd.append("id", it.id); fd.append("name", nameFor(it)); if (preview) fd.append("preview", "true");
+  for (const [k, v] of Object.entries(s)) fd.append(k, String(v));
+  fd.append("edits", JSON.stringify(it.edits));
+  const tb = await touchBlob(it); if (tb) fd.append("touch", tb, "touch.png");
+  const r = await fetch("/api/render", { method: "POST", body: fd });
+  if (preview) { if (!r.ok) throw new Error("failed"); return URL.createObjectURL(await r.blob()); }
+  const j = await r.json(); if (!r.ok) throw new Error(j.detail || "failed");
+  return { ...j, url: j.url + "?v=" + Date.now() };
+}
+async function upload(it) {
+  const fd = new FormData(); fd.append("file", it.file); fd.append("job", job); fd.append("model", settings().model);
+  const r = await fetch("/api/photos", { method: "POST", body: fd }); const j = await r.json();
+  if (!r.ok) throw new Error(j.detail || "failed");
+  it.id = j.id; it.preview = j.preview; it.w = j.width; it.h = j.height;
+}
 async function run() {
   if (running) return;
   running = true;
-  const s = settings();
-  for (const it of items) {
-    if (it.state !== "waiting") continue;
-    it.state = "working"; render();
-    const fd = new FormData();
-    fd.append("file", it.file); fd.append("job", job);
-    for (const [k, v] of Object.entries(s)) fd.append(k, String(v));
+  for (;;) {
+    const it = items.find((i) => i.state === "queued"); if (!it) break;
     try {
-      const r = await fetch("/api/process", { method: "POST", body: fd });
-      const j = await r.json();
-      if (!r.ok) throw new Error(j.detail || "failed");
-      it.result = { ...j, url: j.url + "?v=" + Date.now() }; it.state = "done";
+      if (!it.id) { it.state = "finding"; render(); await upload(it); }
+      it.state = "rendering"; render();
+      it.result = await renderOne(it); it.state = "done";
     } catch (e) { it.state = "error"; it.error = String(e.message || e); }
     render();
   }
-  running = false; render();
+  running = false; lastRenderedSettings = JSON.stringify(settings()) + $("prefix").value; render();
 }
-$("again").onclick = () => { job = newJob(); items.forEach((it) => { it.state = "waiting"; it.result = null; it.error = null; }); run(); };
-$("clear").onclick = () => { items.splice(0); job = newJob(); render(); };
+// Apply to all: only re-renders (quick). A new speed setting is worked out by the server the first time it's needed.
+$("again").onclick = () => { items.forEach((it) => { it.state = "queued"; it.error = null; }); run(); };
+// Clear starts a new batch (so the ZIP has nothing old in it) and carries the logo over.
+$("clear").onclick = async () => { items.splice(0); job = newJob(); lastRenderedSettings = ""; render(); if (logoFile) await sendLogo(logoFile); };
 
+// ------------------------------------------------------------------ the logo
+$("logoPick").onclick = () => $("logoFile").click();
+async function sendLogo(f) {
+  const fd = new FormData(); fd.append("job", job); fd.append("file", f);
+  const r = await fetch("/api/logo", { method: "POST", body: fd });
+  logoOn = r.ok; logoFile = r.ok ? f : null; logoState(); render();
+}
+$("logoFile").onchange = async (e) => { const f = e.target.files[0]; e.target.value = ""; if (f) await sendLogo(f); };
+$("logoRemove").onclick = async () => { await fetch(`/api/logo/${job}`, { method: "DELETE" }); logoOn = false; logoFile = null; logoState(); render(); };
+function logoState() { $("logoState").textContent = logoOn ? tr("logoOn", "The logo will be stamped on every photo.") : tr("logoNone"); $("logoOpts").hidden = !logoOn; $("logoRemove").hidden = !logoOn; }
+
+// ------------------------------------------------------------------ the grid
 function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]); }
-function render() {
-  const done = items.filter((i) => i.state === "done").length, busy = items.some((i) => i.state === "working" || i.state === "waiting");
+function updateBar() {
+  const done = items.filter((i) => i.state === "done").length, busy = items.some((i) => ["queued", "finding", "rendering"].includes(i.state));
   $("count").textContent = items.length ? `${done} ${tr("of", "of")} ${items.length} ${tr("photos", "photos")}` + (busy ? " · " + tr("working", "Working…") : "") : "";
   $("prog").hidden = !busy; $("prog").max = items.length || 1; $("prog").value = done;
-  $("clear").disabled = !items.length || busy; $("again").disabled = !items.length || busy;
+  $("clear").disabled = !items.length || busy;
+  const cur = JSON.stringify(settings()) + $("prefix").value, changed = !busy && items.length && lastRenderedSettings && cur !== lastRenderedSettings;
+  $("again").disabled = !items.length || busy; $("again").classList.toggle("changed", !!changed);
+  $("again").textContent = changed ? tr("changed", "Settings changed: apply to all") : tr("again");
   const zip = $("zip"), ok = done > 0 && !busy;
   zip.href = ok ? `/api/jobs/${job}.zip` : "#"; zip.style.pointerEvents = ok ? "" : "none"; zip.style.opacity = ok ? "" : ".5"; zip.setAttribute("aria-disabled", ok ? "false" : "true");
-  if (!items.length) { $("grid").innerHTML = `<p class="empty">${esc(tr("empty", EN.empty))}</p>`; return; }
+}
+function render() {
+  updateBar();
+  if (!items.length) { $("grid").innerHTML = `<p class="empty">${esc(tr("empty", "Your cleaned photos will show here."))}</p>`; return; }
   $("grid").innerHTML = items.map((it, i) => {
-    const pic = it.state === "done" ? `<img src="${it.result.url}" alt="">` : it.state === "error" ? `<img src="${it.before}" alt="" style="opacity:.5">` : `<div class="spin"></div>`;
-    const tag = it.state === "waiting" ? tr("waiting", "Waiting") : "";
+    const pic = it.state === "done" ? `<img src="${it.result.url}" alt="">` : it.state === "error" ? (it.preview ? `<img src="${it.preview}" alt="" style="opacity:.5">` : "") : `<div class="spin"></div>`;
+    const tag = it.state === "queued" ? tr("waiting", "Waiting") : it.state === "finding" ? tr("finding", "Finding the product…") : "";
+    const editedTag = it.state === "done" && (it.touch || JSON.stringify(it.edits) !== JSON.stringify(blankEdits())) ? `<span class="tag">${esc(tr("edited", "Edited"))}</span>` : "";
     const warns = (it.result?.warnings || []).map((w) => `<div class="warn">${esc(lang === "ar" ? T.ar.warns[w.code] || w.text : w.text)}</div>`).join("");
     const err = it.state === "error" ? `<div class="err">${esc((lang === "ar" ? T.ar.errs[it.error] : null) || tr("failed", "Couldn't clean this photo") + (it.error.length < 40 ? ` (${it.error})` : ""))}</div>` : "";
-    const acts = it.state === "done" ? `<div class="acts"><a class="btn" href="${it.result.url}" download="${esc(it.result.name)}">${esc(tr("download", "Download"))}</a><button type="button" data-cmp="${i}">${esc(tr("compare", "Compare"))}</button><span class="hint" dir="ltr">${(it.result.bytes / 1024).toFixed(0)} KB</span></div>` : "";
-    return `<div class="card item"><div class="pic" data-cmp="${it.state === "done" ? i : ""}">${pic}${tag ? `<span class="tag">${esc(tag)}</span>` : ""}</div>
-      <div class="meta"><div class="name" title="${esc(it.file.name)}">${esc(it.file.name)}</div>${warns}${err}${acts}</div></div>`;
+    const acts = it.state === "done" ? `<div class="acts"><button type="button" class="sm primary" data-edit="${i}">${esc(tr("edit", "Edit"))}</button><a class="btn sm" href="${it.result.url}" download="${esc(it.result.name)}">${esc(tr("download", "Download"))}</a><button type="button" class="sm" data-cmp="${i}">${esc(tr("compare", "Compare"))}</button><span class="hint" dir="ltr">${(it.result.bytes / 1024).toFixed(0)} KB</span></div>` : "";
+    return `<div class="card item"><div class="pic" data-edit="${it.state === "done" ? i : ""}">${pic}${tag ? `<span class="tag">${esc(tag)}</span>` : editedTag}</div>
+      <div class="meta"><div class="name" title="${esc(it.file.name)}">${esc(it.state === "done" ? it.result.name : it.file.name)}</div>${warns}${err}${acts}</div></div>`;
   }).join("");
 }
 $("grid").addEventListener("click", (e) => {
-  const el = e.target.closest("[data-cmp]"); if (!el || el.dataset.cmp === "") return;
-  const it = items[+el.dataset.cmp]; $("dBefore").src = it.before; $("dAfter").src = it.result.url; $("dlg").showModal();
+  const c = e.target.closest("[data-cmp]");
+  if (c) { const it = items[+c.dataset.cmp]; $("dBefore").src = it.preview; $("dAfter").src = it.result.url; $("dlg").showModal(); return; }
+  const el = e.target.closest("[data-edit]"); if (el && el.dataset.edit !== "") openEditor(+el.dataset.edit);
 });
 $("dClose").onclick = () => $("dlg").close();
 $("dlg").addEventListener("click", (e) => { if (e.target === $("dlg")) $("dlg").close(); });
 
-fetch("/api/status").then((r) => r.json()).then((s) => { if (!s.model_ready) { $("notice").textContent = tr("noModel", "The background model isn't downloaded yet. Run ./run.sh once to get it."); $("notice").style.display = "block"; } }).catch(() => {});
+// ------------------------------------------------------------------ the editor
+let E = null; // { it, edits, touch, mask (ImageData overlay canvas), tool, brush, ratio, drag }
+const sliders = ["straighten", "brightness", "contrast", "saturation", "warmth", "sharpness", "fill"];
+async function openEditor(i) {
+  const it = items[i];
+  E = { it, edits: JSON.parse(JSON.stringify(it.edits)), tool: "crop", brush: "keep", ratio: 0, drag: null, overlay: null };
+  const img = $("eImg");
+  img.src = it.preview;
+  await img.decode().catch(() => {});
+  const nat = { w: img.naturalWidth, h: img.naturalHeight };
+  E.nat = nat;
+  E.touch = document.createElement("canvas"); E.touch.width = nat.w; E.touch.height = nat.h;
+  if (it.touch) E.touch.getContext("2d").drawImage(it.touch, 0, 0, nat.w, nat.h);
+  const can = $("eCan"); can.width = nat.w; can.height = nat.h;
+  // the red overlay: everything the AI thinks is background
+  const m = new Image(); m.src = `/api/photos/${job}/${it.id}/mask.png?model=${settings().model}&v=${Date.now()}`;
+  await m.decode().catch(() => {});
+  const oc = document.createElement("canvas"); oc.width = nat.w; oc.height = nat.h; const ox = oc.getContext("2d");
+  ox.drawImage(m, 0, 0, nat.w, nat.h); const d = ox.getImageData(0, 0, nat.w, nat.h);
+  for (let p = 0; p < d.data.length; p += 4) { const a = 255 - d.data[p]; d.data[p] = 220; d.data[p + 1] = 38; d.data[p + 2] = 38; d.data[p + 3] = a * 0.5; }
+  ox.putImageData(d, 0, 0); E.overlay = oc;
+  for (const k of sliders) {
+    const el = $("s_" + k), v = k === "straighten" ? E.edits[k] : k === "fill" ? Math.round((E.edits.fill ?? settings().fill) * 100) : Math.round(E.edits[k] * 100);
+    el.value = v; el.nextElementSibling.textContent = el.value;
+  }
+  $("ownFill").checked = E.edits.fill !== null; $("ownFillRow").hidden = E.edits.fill === null;
+  setTool("crop"); draw(); $("ed").showModal(); preview();
+}
+function setTool(t) { E.tool = t; $("tCrop").classList.toggle("on", t === "crop"); $("tTouch").classList.toggle("on", t === "touch"); $("cropTools").hidden = t !== "crop"; $("touchTools").hidden = t !== "touch"; draw(); }
+$("tCrop").onclick = () => setTool("crop"); $("tTouch").onclick = () => setTool("touch");
+document.querySelectorAll("#ratio button").forEach((b) => (b.onclick = () => { E.ratio = +b.dataset.r; document.querySelectorAll("#ratio button").forEach((x) => x.classList.toggle("on", x === b)); if (E.ratio && E.edits.crop) { fitRatio(); draw(); preview(); } }));
+document.querySelectorAll("#brush button").forEach((b) => (b.onclick = () => { E.brush = b.dataset.b; document.querySelectorAll("#brush button").forEach((x) => x.classList.toggle("on", x === b)); }));
+$("bsize").oninput = () => ($("bsizeV").textContent = $("bsize").value);
+$("cropClear").onclick = () => { E.edits.crop = null; draw(); preview(); };
+$("touchClear").onclick = () => { E.touch.getContext("2d").clearRect(0, 0, E.nat.w, E.nat.h); draw(); preview(); };
+$("rotL").onclick = () => { E.edits.rotate = (E.edits.rotate + 270) % 360; preview(); };
+$("rotR").onclick = () => { E.edits.rotate = (E.edits.rotate + 90) % 360; preview(); };
+$("flip").onclick = () => { E.edits.flip = !E.edits.flip; preview(); };
+$("ownFill").onchange = () => { $("ownFillRow").hidden = !$("ownFill").checked; E.edits.fill = $("ownFill").checked ? $("s_fill").value / 100 : null; preview(); };
+for (const k of sliders) $("s_" + k).addEventListener("input", (ev) => {
+  const v = +ev.target.value; ev.target.nextElementSibling.textContent = ev.target.value;
+  if (k === "straighten") E.edits.straighten = v; else if (k === "fill") E.edits.fill = $("ownFill").checked ? v / 100 : null; else E.edits[k] = v / 100;
+  preview();
+});
+$("eReset").onclick = () => { E.edits = blankEdits(); E.touch.getContext("2d").clearRect(0, 0, E.nat.w, E.nat.h); for (const k of sliders) { const el = $("s_" + k); el.value = k === "fill" ? Math.round(settings().fill * 100) : 0; el.nextElementSibling.textContent = el.value; } $("ownFill").checked = false; $("ownFillRow").hidden = true; draw(); preview(); };
+$("eCancel").onclick = () => $("ed").close();
+$("eSave").onclick = async () => {
+  const it = E.it; it.edits = E.edits;
+  const painted = hasPaint(E.touch); it.touch = painted ? E.touch : null;
+  $("ed").close(); it.state = "queued"; render(); run();
+};
+function hasPaint(c) { const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data; for (let i = 3; i < d.length; i += 16) if (d[i]) return true; return false; }
+
+function draw() {
+  if (!E) return;
+  const c = $("eCan"), x = c.getContext("2d"), { w, h } = E.nat;
+  x.clearRect(0, 0, w, h);
+  if (E.tool === "touch") { x.drawImage(E.overlay, 0, 0); x.globalAlpha = 0.6; x.drawImage(E.touch, 0, 0); x.globalAlpha = 1; }
+  const cr = E.edits.crop;
+  if (cr) {
+    const r = [cr[0] * w, cr[1] * h, cr[2] * w, cr[3] * h];
+    if (E.tool === "crop") {
+      x.fillStyle = "rgba(0,0,0,.5)"; x.beginPath(); x.rect(0, 0, w, h); x.rect(r[0], r[1], r[2], r[3]); x.fill("evenodd");
+      x.strokeStyle = "#fff"; x.lineWidth = Math.max(2, w / 400); x.strokeRect(r[0], r[1], r[2], r[3]);
+      const hs = Math.max(10, w / 60); x.fillStyle = "#fff";
+      for (const [px, py] of corners(r)) x.fillRect(px - hs / 2, py - hs / 2, hs, hs);
+    } else { x.strokeStyle = "rgba(255,255,255,.8)"; x.setLineDash([8, 6]); x.lineWidth = Math.max(2, w / 500); x.strokeRect(r[0], r[1], r[2], r[3]); x.setLineDash([]); }
+  }
+}
+const corners = (r) => [[r[0], r[1]], [r[0] + r[2], r[1]], [r[0], r[1] + r[3]], [r[0] + r[2], r[1] + r[3]]];
+function pos(ev) { const b = $("eCan").getBoundingClientRect(); return { x: (ev.clientX - b.left) / b.width * E.nat.w, y: (ev.clientY - b.top) / b.height * E.nat.h }; }
+function fitRatio() {
+  if (!E.ratio || !E.edits.crop) return;
+  let [x, y, w, h] = E.edits.crop, pw = w * E.nat.w, ph = h * E.nat.h;
+  if (pw / ph > E.ratio) pw = ph * E.ratio; else ph = pw / E.ratio;
+  E.edits.crop = [x, y, Math.min(pw / E.nat.w, 1 - x), Math.min(ph / E.nat.h, 1 - y)];
+}
+const can = $("eCan");
+can.addEventListener("pointerdown", (ev) => {
+  can.setPointerCapture(ev.pointerId); const p = pos(ev), { w, h } = E.nat;
+  if (E.tool === "touch") { E.drag = { paint: true, last: p }; paint(p, p); return; }
+  const cr = E.edits.crop, hs = Math.max(18, w / 30);
+  if (cr) {
+    const r = [cr[0] * w, cr[1] * h, cr[2] * w, cr[3] * h], cs = corners(r);
+    const k = cs.findIndex(([cx, cy]) => Math.abs(cx - p.x) < hs && Math.abs(cy - p.y) < hs);
+    if (k >= 0) { const opp = cs[3 - k]; E.drag = { mode: "new", ax: opp[0], ay: opp[1] }; return; }
+    if (p.x > r[0] && p.x < r[0] + r[2] && p.y > r[1] && p.y < r[1] + r[3]) { E.drag = { mode: "move", dx: p.x - r[0], dy: p.y - r[1], rw: r[2], rh: r[3] }; return; }
+  }
+  E.drag = { mode: "new", ax: p.x, ay: p.y };
+});
+can.addEventListener("pointermove", (ev) => {
+  if (!E || !E.drag) return; const p = pos(ev), { w, h } = E.nat, d = E.drag;
+  if (d.paint) { paint(d.last, p); d.last = p; return; }
+  if (d.mode === "move") {
+    const nx = Math.max(0, Math.min(w - d.rw, p.x - d.dx)), ny = Math.max(0, Math.min(h - d.rh, p.y - d.dy));
+    E.edits.crop = [nx / w, ny / h, d.rw / w, d.rh / h];
+  } else {
+    let x2 = Math.max(0, Math.min(w, p.x)), y2 = Math.max(0, Math.min(h, p.y));
+    if (E.ratio) { const dw = Math.abs(x2 - d.ax), dh = Math.abs(y2 - d.ay); if (dw / Math.max(dh, 1) > E.ratio) x2 = d.ax + Math.sign(x2 - d.ax) * dh * E.ratio; else y2 = d.ay + Math.sign(y2 - d.ay) * dw / E.ratio; }
+    const x = Math.min(d.ax, x2), y = Math.min(d.ay, y2), cw = Math.abs(x2 - d.ax), ch = Math.abs(y2 - d.ay);
+    if (cw > 8 && ch > 8) E.edits.crop = [x / w, y / h, Math.min(cw, w - x) / w, Math.min(ch, h - y) / h];
+  }
+  draw();
+});
+const endDrag = () => { if (E && E.drag) { E.drag = null; draw(); preview(); } };
+can.addEventListener("pointerup", endDrag); can.addEventListener("pointercancel", endDrag);
+function paint(a, b) {
+  const x = E.touch.getContext("2d"), size = +$("bsize").value * E.nat.w / 1000;
+  x.lineCap = x.lineJoin = "round"; x.lineWidth = size;
+  x.globalCompositeOperation = E.brush === "erase" ? "destination-out" : "source-over";
+  x.strokeStyle = E.brush === "keep" ? "rgb(0,255,0)" : "rgb(255,0,0)";
+  x.beginPath(); x.moveTo(a.x, a.y); x.lineTo(b.x, b.y); x.stroke(); x.globalCompositeOperation = "source-over";
+  draw();
+}
+// the live result: asks for a small quick render, at most one at a time, always the newest settings
+let pv = { busy: false, again: false };
+async function preview() {
+  if (!E) return;
+  if (pv.busy) { pv.again = true; return; }
+  pv.busy = true; $("eBusy").hidden = false;
+  try {
+    const tmp = { ...E.it, edits: E.edits, touch: hasPaint(E.touch) ? E.touch : null };
+    const url = await renderOne(tmp, true);
+    const old = $("ePrev").src; $("ePrev").src = url; if (old.startsWith("blob:")) URL.revokeObjectURL(old);
+  } catch {}
+  pv.busy = false; $("eBusy").hidden = true;
+  if (pv.again) { pv.again = false; setTimeout(preview, 30); }
+}
+$("ed").addEventListener("close", () => { E = null; });
+
+fetch("/api/status").then((r) => r.json()).then((s) => { if (!s.model_ready) { $("notice").textContent = tr("noModel", "The background model isn't downloaded yet. Run ./run.sh once to get it."); $("notice").style.display = "block"; } if (!s.models?.fast) document.querySelector("input[name=model][value=fast]").closest("label").hidden = true; }).catch(() => {});
 applyLang();
 </script>
 </body>

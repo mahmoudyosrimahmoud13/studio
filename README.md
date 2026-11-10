@@ -10,6 +10,13 @@ Turns ordinary product photos into clean, matching catalog photos, on your own c
 - **Soft shadow** under the product, and the background you want: white, soft gray, any color, or see-through.
 - **Warns you** when a photo is too small, dark, blurry, or the product touches the edge (may be cut off).
 - **Batch**: drop 50 photos at once, then download them all as one ZIP. iPhone photos (HEIC) work.
+- **Editor for each photo**: crop (free, 1:1 or 4:5), rotate, mirror, straighten, brightness, contrast, color,
+  warmth, sharpness, its own product size, and a **touch-up brush**: paint *Keep* over parts the AI dropped, or
+  *Remove* over leftovers (a table edge, a hanger). The result updates live as you change things.
+- **Your logo** on every photo (corner or middle, size and strength), and **file names by product code**
+  (type NM-102 and the photos become NM-102-1, NM-102-2… in the order shown).
+- **Fast**: the slow AI step runs once per photo (about 1.5 s with Best, 0.3 s with Fast). Every change after that,
+  in the editor or for the whole batch, takes about half a second.
 
 It's separate from Rubies and Hydro Alex for now. The photo code (`studio/pipeline.py`) has nothing web-related in
 it, so it can be moved into either site later.
@@ -37,12 +44,19 @@ More (`./run.sh help` shows them all):
 
 ## Using the page
 
-1. Pick the look on the left: background, shape (square, or tall 4:5 for clothes), product size, centered or
-   standing on the floor (good for heaters, toilets, shoes), shadow, light fix, file type and size.
-2. Drop photos in the box (or click to choose, or paste). Each one is done in about 3 to 5 seconds.
-3. **Compare** shows before and after side by side. Yellow notes say what to fix next time you shoot.
-4. Changed your mind about the look? **Redo all with these settings**.
-5. **Download all (ZIP)**. Results are kept 24 hours on the laptop, then deleted.
+1. Pick the look on the left: speed (Best edges or Fast), background, shape (square, or tall 4:5 for clothes),
+   product size, centered or standing on the floor (good for heaters, toilets, shoes), shadow, light fix, file
+   type and size. Optional: **File names** (a product code) and **Logo on photos**.
+2. Drop photos in the box (or click to choose, or paste).
+3. Click a photo (or **Edit**) to fix just that one: **Crop** and **Touch up** on the left, the live result in the
+   middle, rotate and sliders on the right. **Save** applies it; **Reset** undoes all edits on that photo.
+4. **Compare** shows before and after side by side. Yellow notes say what to fix next time you shoot.
+5. Changed the look on the left? The button turns into **Settings changed: apply to all**. Edits made on single
+   photos are kept.
+6. **Download all (ZIP)**. Results are kept 24 hours on the laptop, then deleted.
+
+**Best or Fast?** Fast (about 6 times quicker) is fine for plain products on a plain background. Use Best for hair,
+lace, glass, thin parts like hangers, or a busy background.
 
 Which file type: **WebP** is the smallest and right for the websites. **JPG** for WhatsApp and older apps.
 **PNG** when you need see-through with the sharpest edges.
@@ -62,13 +76,16 @@ Which file type: **WebP** is the smallest and right for the websites. **JPG** fo
 ```
 
 - The first line installs the test tool into Studio's private Python folder.
-- The second runs the tests: a clean white result, see-through and tall shapes, the four warnings, and bad input.
+- The second runs the tests: a clean white result, see-through and tall shapes, the warnings, bad input, every
+  editor tool (crop, rotate, colors, the brush, logo, own size) and that Fast really is faster.
 
 ## How it works (for later, when it moves into Rubies or Hydro)
 
-- `studio/pipeline.py`: `process(photo_bytes, Options(...))` returns the cleaned photo and its warnings. Needs only
+- `studio/pipeline.py`: three steps. `load()` opens a photo, `mask()` is the AI step (run once, keep the result),
+  `render(img, mask, Options(...), Edits(...), Logo(...))` makes the finished photo. `process()` does all three.
+  Needs only
   `onnxruntime`, `numpy` and `pillow` (plus `pillow-heif` for iPhone photos) and the model file in `models/`.
-  The model is ISNet "general use" (the one the rembg project uses), 1024 x 1024 input.
+  Models: ISNet "general use" (Best, 1024 x 1024) and U2Net-P (Fast, 320 x 320), both from the rembg project.
 - `studio/web.py`: the page's small API. `studio/cli.py`: the folder cleaner.
 - To merge: copy `pipeline.py` into the site's `backend/app/services/`, call `process()` after an upload (in the
   background, since each photo takes a few seconds), and add a per-shop switch "clean my photos". The website side
