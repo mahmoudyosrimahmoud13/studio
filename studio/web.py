@@ -206,7 +206,7 @@ def render(job: str = Form(...), id: str = Form(...), name: str = Form(""), mode
         ed = ed if isinstance(ed, dict) else {}
     except ValueError:
         ed = {}
-    keys = {"crop", "rotate", "flip", "straighten", "brightness", "contrast", "saturation", "warmth", "sharpness", "fill"}
+    keys = {"crop", "rotate", "flip", "straighten", "brightness", "contrast", "saturation", "warmth", "tint", "white", "auto_color", "sharpness", "fill"}
     e = Edits(**{k: v for k, v in ed.items() if k in keys})
     if touch is not None:
         t = touch.file.read(8 * 1024 * 1024 + 1)

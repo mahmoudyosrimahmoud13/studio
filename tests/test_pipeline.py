@@ -142,3 +142,31 @@ def test_fast_model_is_faster_and_still_works():
     r = render(img, mf, Options(fmt="png"))
     a = np.asarray(Image.open(io.BytesIO(r.data)).convert("RGB")).astype(int)
     assert (a[5, 5] >= 250).all() and a[800, 800, 0] > 120
+
+
+def test_colored_product_keeps_its_color():
+    """A strongly colored product (maroon) must not push the photo to the opposite color: white stays white."""
+    from studio.pipeline import _white_balance
+    rgb = np.zeros((300, 300, 3), np.float32)
+    rgb[:] = (110, 30, 45)                       # almost all maroon
+    rgb[:40] = (235, 235, 232)                   # a white strip
+    g = _white_balance(rgb)
+    assert np.allclose(g, 1, atol=0.02)          # neutral white: nothing to fix, and the maroon is ignored
+    warm = np.full((300, 300, 3), (215, 203, 180), np.float32)  # a warm-lit cream wall, no product color
+    gw = _white_balance(warm)
+    assert gw[0] < 1 and gw[2] > 1 and gw.min() >= 0.92 and gw.max() <= 1.08  # a little cooler, never extreme
+    plain = np.full((100, 100, 3), (120, 20, 40), np.float32)  # nothing neutral at all
+    assert (_white_balance(plain) == 1).all()
+
+
+def test_manual_color_controls():
+    e = Edits(white=("0.5", 0.2), tint=5, auto_color="false").clean()
+    assert e.white == (0.5, 0.2) and e.tint == 1 and e.auto_color is False
+    assert Edits(white=(3, 0.2)).clean().white is None
+    img = Image.new("RGBA", (400, 400), (230, 220, 180, 255))   # a yellowish "white" wall
+    r = render(img, None, Options(fmt="png", remove_background=False, enhance=False, shadow="none"), Edits(white=(0.5, 0.5)))
+    px = np.asarray(Image.open(io.BytesIO(r.data)).convert("RGB")).astype(int)[200, 200]
+    assert max(px) - min(px) < 8               # picking the wall made it neutral
+    r = render(img, None, Options(fmt="png", remove_background=False, enhance=False, shadow="none"), Edits(tint=-1))
+    px = np.asarray(Image.open(io.BytesIO(r.data)).convert("RGB")).astype(int)[200, 200]
+    assert px[1] > 220 and px[0] < 230         # greener

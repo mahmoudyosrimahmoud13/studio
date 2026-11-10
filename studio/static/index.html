@@ -219,13 +219,21 @@
   <div class="ed">
     <div class="pane">
       <h3><span data-t="photo">Photo</span><span class="sp"></span>
-        <span class="seg" role="tablist"><button type="button" id="tCrop" class="on" data-t="crop">Crop</button><button type="button" id="tTouch" data-t="touch">Touch up</button></span></h3>
+        <span class="seg" role="tablist"><button type="button" id="tCrop" class="on" data-t="crop">Crop</button><button type="button" id="tTouch" data-t="touch">Touch up</button><button type="button" id="tWhite" data-t="whiteTab">Fix colors</button></span></h3>
       <div class="stage"><div class="wrap"><img id="eImg" alt=""><canvas id="eCan"></canvas></div></div>
       <div class="tools" id="cropTools">
         <div class="row"><span class="hint" data-t="cropHint">Drag on the photo to choose what to keep. Drag inside the box to move it, or a corner to resize.</span></div>
         <div class="row">
           <span class="seg" id="ratio"><button type="button" class="on" data-r="0" data-t="free">Free</button><button type="button" data-r="1">1:1</button><button type="button" data-r="0.8">4:5</button></span>
           <button type="button" class="sm" id="cropClear" data-t="cropClear">No crop</button>
+        </div>
+      </div>
+      <div class="tools" id="whiteTools" hidden>
+        <div class="row"><span class="hint" data-t="whiteHint">Colors look wrong? Tap something in the photo that should be white or gray: a wall, a white shirt, a tile. The colors are fixed from that spot.</span></div>
+        <div class="row">
+          <span id="whiteState" class="hint" data-t="whiteNone">No spot picked: colors are fixed automatically.</span>
+          <span class="sp"></span>
+          <button type="button" class="sm" id="whiteClear" data-t="whiteClear" hidden>Remove the spot</button>
         </div>
       </div>
       <div class="tools" id="touchTools" hidden>
@@ -255,6 +263,8 @@
         <div class="slider"><span data-t="contrast">Contrast</span><input type="range" id="s_contrast" min="-100" max="100" value="0"><output></output></div>
         <div class="slider"><span data-t="saturation">Color</span><input type="range" id="s_saturation" min="-100" max="100" value="0"><output></output></div>
         <div class="slider"><span data-t="warmth">Warmth</span><input type="range" id="s_warmth" min="-100" max="100" value="0"><output></output></div>
+        <div class="slider"><span data-t="tint">Green / pink</span><input type="range" id="s_tint" min="-100" max="100" value="0"><output></output></div>
+        <label class="toggle"><input type="checkbox" id="autoColor" checked><span data-t="autoColor">Fix colors automatically</span></label>
         <div class="slider"><span data-t="sharpness">Sharpness</span><input type="range" id="s_sharpness" min="-100" max="100" value="0"><output></output></div>
         <label class="toggle"><input type="checkbox" id="ownFill"><span data-t="ownFill">Own product size</span></label>
         <div class="slider" id="ownFillRow" hidden><span data-t="fill">Product size</span><input type="range" id="s_fill" min="50" max="95" value="82"><output></output></div>
@@ -286,7 +296,7 @@
 </dialog>
 
 <script>
-// Inside another site (Rubies, Hydro Alex) the page is served with window.STUDIO_API (where its API lives) and
+// Inside another site (embedded) the page is served with window.STUDIO_API (where its API lives) and
 // window.STUDIO_EMBED ({ site, back, backLabel, backLabelAr, products, lang, theme }). On its own: "/api", no extras.
 const API = window.STUDIO_API || "/api";
 const EMBED = window.STUDIO_EMBED || null;
@@ -307,7 +317,10 @@ const T = {
     cropHint: "اسحب على الصورة عشان تختار اللي يفضل. اسحب من جوه المربع عشان تحركه، أو من ركن عشان تكبّره.", free: "حر", cropClear: "من غير قص",
     touchHint: "الأحمر هو اللي هيتشال. لوّن بـ \"خلّي\" على الأجزاء اللي اتشالت غلط، أو بـ \"شيل\" على البواقي.", keep: "خلّي", remove: "شيل", erase: "امسح التلوين",
     touchClear: "امسح كل التلوين", brushSize: "الفرشاة", flip: "اعكس", straighten: "عدّل الميل", brightness: "الإضاءة", contrast: "التباين", saturation: "الألوان",
-    warmth: "الدفا", sharpness: "الحدة", ownFill: "حجم خاص للصورة دي", reset: "رجّع زي ما كانت", cancel: "إلغاء", save: "احفظ",
+    warmth: "الدفا", tint: "أخضر / بمبي", autoColor: "ظبّط الألوان تلقائي", whiteTab: "ظبّط الألوان",
+    whiteHint: "الألوان غلط؟ دوس على حاجة في الصورة المفروض لونها أبيض أو رمادي: حيطة، قميص أبيض، سيراميك. الألوان هتتظبط من المكان ده.",
+    whiteNone: "مفيش مكان متحدد: الألوان بتتظبط تلقائي.", whitePicked: "الألوان متظبطة من المكان اللي اخترته. دوس مكان تاني لو عايز تغيّر.",
+    whiteOff: "الضبط التلقائي مقفول: الألوان زي الصورة الأصلية.", whiteClear: "شيل المكان", sharpness: "الحدة", ownFill: "حجم خاص للصورة دي", reset: "رجّع زي ما كانت", cancel: "إلغاء", save: "احفظ",
     changed: "الإعدادات اتغيرت: دوس \"طبّق على الكل\"", noModel: "نموذج إزالة الخلفية مش موجود لسه. شغّل ./run.sh مرة عشان ينزّله.",
     warns: { small: "الصورة صغيرة، فالنتيجة ممكن تبان مش حادة. استخدم ١٠٠٠ بكسل على الأقل في الضلع الصغير.", dark: "الصورة ضلمة. صوّر جنب شباك أو في إضاءة أكتر.",
       blurry: "المنتج باين مش واضح. ثبّت الموبايل أو استخدم ستاند، ودوس على المنتج عشان يعمل فوكس.", cut: "المنتج لامس طرف الصورة، فممكن جزء منه يكون مقطوع. سيب مسافة حواليه.",
@@ -322,6 +335,8 @@ try { lang = localStorage.getItem("studio-lang") || EMBED?.lang || "en"; } catch
 const EN = {};
 document.querySelectorAll("[data-t]").forEach((el) => (EN[el.dataset.t] = el.textContent));
 // Inside a site the photos go to that site's server (kept 24 hours), so don't promise they stay on this computer.
+EN.whitePicked = "Colors fixed from the spot you picked. Tap another spot to change it.";
+EN.whiteOff = "Automatic colors are off: colors stay as in the original photo.";
 EN.drop2Site = "or click to choose, or paste. JPG, PNG, WebP or iPhone (HEIC). Kept for 24 hours, only you can see them.";
 T.ar.drop2Site = "أو دوس واختار، أو الصق. JPG أو PNG أو WebP أو صور الآيفون (HEIC). بتتحفظ 24 ساعة وانت بس اللي تشوفها.";
 if (window.STUDIO_EMBED?.site) document.querySelector("[data-t=drop2]").dataset.t = "drop2Site";
@@ -342,7 +357,7 @@ const newJob = () => Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) 
 let job = newJob();
 const items = []; // { file, name, id, preview, state: queued|finding|rendering|done|error, result, error, edits, touch (canvas|null) }
 let running = false, logoOn = false, logoFile = null, lastRenderedSettings = "";
-const blankEdits = () => ({ crop: null, rotate: 0, flip: false, straighten: 0, brightness: 0, contrast: 0, saturation: 0, warmth: 0, sharpness: 0, fill: null });
+const blankEdits = () => ({ crop: null, rotate: 0, flip: false, straighten: 0, brightness: 0, contrast: 0, saturation: 0, warmth: 0, tint: 0, sharpness: 0, fill: null, white: null, auto_color: true });
 
 function settings() {
   const pick = (n) => document.querySelector(`input[name=${n}]:checked`).value;
@@ -463,7 +478,7 @@ $("dlg").addEventListener("click", (e) => { if (e.target === $("dlg")) $("dlg").
 
 // ------------------------------------------------------------------ the editor
 let E = null; // { it, edits, touch, mask (ImageData overlay canvas), tool, brush, ratio, drag }
-const sliders = ["straighten", "brightness", "contrast", "saturation", "warmth", "sharpness", "fill"];
+const sliders = ["straighten", "brightness", "contrast", "saturation", "warmth", "tint", "sharpness", "fill"];
 async function openEditor(i) {
   const it = items[i];
   E = { it, edits: JSON.parse(JSON.stringify(it.edits)), tool: "crop", brush: "keep", ratio: 0, drag: null, overlay: null };
@@ -489,8 +504,26 @@ async function openEditor(i) {
   $("ownFill").checked = E.edits.fill !== null; $("ownFillRow").hidden = E.edits.fill === null;
   setTool("crop"); draw(); $("ed").showModal(); preview();
 }
-function setTool(t) { E.tool = t; $("tCrop").classList.toggle("on", t === "crop"); $("tTouch").classList.toggle("on", t === "touch"); $("cropTools").hidden = t !== "crop"; $("touchTools").hidden = t !== "touch"; draw(); }
-$("tCrop").onclick = () => setTool("crop"); $("tTouch").onclick = () => setTool("touch");
+function setTool(t) {
+  E.tool = t;
+  for (const [id, k] of [["tCrop", "crop"], ["tTouch", "touch"], ["tWhite", "white"]]) $(id).classList.toggle("on", t === k);
+  $("cropTools").hidden = t !== "crop"; $("touchTools").hidden = t !== "touch"; $("whiteTools").hidden = t !== "white";
+  $("eCan").style.cursor = t === "white" ? "crosshair" : "";
+  whiteState(); draw();
+}
+$("tCrop").onclick = () => setTool("crop"); $("tTouch").onclick = () => setTool("touch"); $("tWhite").onclick = () => setTool("white");
+// "Fix colors": a spot that should be white or gray, a green/pink slider, and automatic colors on or off
+function whiteState() {
+  if (!E) return;
+  const on = !!E.edits.white;
+  $("whiteState").dataset.t = on ? "whitePicked" : (E.edits.auto_color === false ? "whiteOff" : "whiteNone");
+  $("whiteState").textContent = tr($("whiteState").dataset.t, EN[$("whiteState").dataset.t]);
+  $("whiteClear").hidden = !on;
+  $("autoColor").checked = E.edits.auto_color !== false;
+  $("autoColor").disabled = on;
+}
+$("whiteClear").onclick = () => { E.edits.white = null; whiteState(); draw(); preview(); };
+$("autoColor").onchange = () => { E.edits.auto_color = $("autoColor").checked; whiteState(); preview(); };
 document.querySelectorAll("#ratio button").forEach((b) => (b.onclick = () => { E.ratio = +b.dataset.r; document.querySelectorAll("#ratio button").forEach((x) => x.classList.toggle("on", x === b)); if (E.ratio && E.edits.crop) { fitRatio(); draw(); preview(); } }));
 document.querySelectorAll("#brush button").forEach((b) => (b.onclick = () => { E.brush = b.dataset.b; document.querySelectorAll("#brush button").forEach((x) => x.classList.toggle("on", x === b)); }));
 $("bsize").oninput = () => ($("bsizeV").textContent = $("bsize").value);
@@ -505,7 +538,7 @@ for (const k of sliders) $("s_" + k).addEventListener("input", (ev) => {
   if (k === "straighten") E.edits.straighten = v; else if (k === "fill") E.edits.fill = $("ownFill").checked ? v / 100 : null; else E.edits[k] = v / 100;
   preview();
 });
-$("eReset").onclick = () => { E.edits = blankEdits(); E.touch.getContext("2d").clearRect(0, 0, E.nat.w, E.nat.h); for (const k of sliders) { const el = $("s_" + k); el.value = k === "fill" ? Math.round(settings().fill * 100) : 0; el.nextElementSibling.textContent = el.value; } $("ownFill").checked = false; $("ownFillRow").hidden = true; draw(); preview(); };
+$("eReset").onclick = () => { E.edits = blankEdits(); E.touch.getContext("2d").clearRect(0, 0, E.nat.w, E.nat.h); for (const k of sliders) { const el = $("s_" + k); el.value = k === "fill" ? Math.round(settings().fill * 100) : 0; el.nextElementSibling.textContent = el.value; } $("ownFill").checked = false; $("ownFillRow").hidden = true; whiteState(); draw(); preview(); };
 $("eCancel").onclick = () => $("ed").close();
 $("eSave").onclick = async () => {
   const it = E.it; it.edits = E.edits;
@@ -519,6 +552,13 @@ function draw() {
   const c = $("eCan"), x = c.getContext("2d"), { w, h } = E.nat;
   x.clearRect(0, 0, w, h);
   if (E.tool === "touch") { x.drawImage(E.overlay, 0, 0); x.globalAlpha = 0.6; x.drawImage(E.touch, 0, 0); x.globalAlpha = 1; }
+  const wp = E.edits.white;
+  if (wp) { // the picked white spot: a ring that shows on light and dark photos
+    const cx = wp[0] * w, cy = wp[1] * h, rr = Math.max(9, w / 45);
+    x.lineWidth = Math.max(2, w / 300);
+    x.strokeStyle = "#000"; x.beginPath(); x.arc(cx, cy, rr + x.lineWidth, 0, 7); x.stroke();
+    x.strokeStyle = "#fff"; x.beginPath(); x.arc(cx, cy, rr, 0, 7); x.stroke();
+  }
   const cr = E.edits.crop;
   if (cr) {
     const r = [cr[0] * w, cr[1] * h, cr[2] * w, cr[3] * h];
@@ -542,6 +582,7 @@ const can = $("eCan");
 can.addEventListener("pointerdown", (ev) => {
   can.setPointerCapture(ev.pointerId); const p = pos(ev), { w, h } = E.nat;
   if (E.tool === "touch") { E.drag = { paint: true, last: p }; paint(p, p); return; }
+  if (E.tool === "white") { E.edits.white = [Math.max(0, Math.min(1, p.x / w)), Math.max(0, Math.min(1, p.y / h))]; whiteState(); draw(); preview(); return; }
   const cr = E.edits.crop, hs = Math.max(18, w / 30);
   if (cr) {
     const r = [cr[0] * w, cr[1] * h, cr[2] * w, cr[3] * h], cs = corners(r);

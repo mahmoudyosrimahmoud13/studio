@@ -9,8 +9,8 @@ Three steps, so changing the look never waits for the slow part:
             straighten; clean edges with no halo; gentle light fix plus your sliders; crop to the product and place it
             the same way on every canvas; soft shadow, background, optional logo; then the file.
 
-process() does all three for one photo (used by the terminal cleaner and the tests). This file has no web or Rubies
-code in it, so it can be copied into Rubies or Hydro later.
+process() does all three for one photo (used by the terminal cleaner and the tests). This file has no web code in it,
+so it can be used on its own or copied into another app.
 """
 from __future__ import annotations
 
@@ -97,6 +97,9 @@ class Edits:
     contrast: float = 0.0
     saturation: float = 0.0
     warmth: float = 0.0          # minus = cooler (blue), plus = warmer (yellow)
+    tint: float = 0.0            # minus = greener, plus = pinker (magenta)
+    white: tuple[float, float] | None = None  # a point that should be white or gray (x, y as parts of the photo)
+    auto_color: bool = True      # False: skip the automatic white balance for this photo
     sharpness: float = 0.0
     fill: float | None = None    # this photo's own product size, instead of the batch one
     touch: bytes | None = None   # PNG: green = always keep, red = always remove (any size, stretched to the photo)
@@ -112,8 +115,17 @@ class Edits:
                 crop = None
         return Edits(crop=crop, rotate=int(self.rotate or 0) % 360 // 90 * 90, flip=bool(self.flip),
                      straighten=_f(self.straighten, -20, 20), brightness=_f(self.brightness), contrast=_f(self.contrast),
-                     saturation=_f(self.saturation), warmth=_f(self.warmth), sharpness=_f(self.sharpness),
+                     saturation=_f(self.saturation), warmth=_f(self.warmth), sharpness=_f(self.sharpness), tint=_f(self.tint),
+                     white=_point(self.white), auto_color=self.auto_color is not False and self.auto_color != "false",
                      fill=None if self.fill in (None, "") else _f(self.fill, 0.5, 0.95), touch=self.touch or None)
+
+
+def _point(v) -> tuple[float, float] | None:
+    try:
+        x, y = (float(a) for a in v)
+        return (x, y) if 0 <= x <= 1 and 0 <= y <= 1 else None
+    except (TypeError, ValueError):
+        return None
 
 
 @dataclass
@@ -302,15 +314,42 @@ def _decontaminate(rgb: np.ndarray, alpha: np.ndarray) -> np.ndarray:
     return out
 
 
-def _enhance(rgb: np.ndarray, alpha: np.ndarray) -> np.ndarray:
-    """Gentle fixes measured on the product only: white balance (gray world, half strength), brightness and contrast
-    (stretch the 1st to 99th percentile toward the full range, but not more than 1.35x)."""
+def _white_balance(rgb: np.ndarray) -> np.ndarray:
+    """Color gains that remove a light's color cast, or no change when we can't tell.
+
+    It only looks at pixels that should be neutral: whites, grays and pale walls (low color, not too dark, not blown
+    out), anywhere in the photo. It never averages the product itself, because a maroon tracksuit or a green tap is
+    not a gray thing: averaging it to gray pushes the whole photo to the opposite color (whites turn mint, skin pale).
+    The correction is half strength and at most 8% per color, so a warm room stays a little warm and nothing looks fake.
+    """
+    small = rgb[:: max(1, rgb.shape[0] // 300), :: max(1, rgb.shape[1] // 300)].reshape(-1, 3)
+    hi, lo = small.max(axis=1), small.min(axis=1)
+    neutral = (hi > 70) & (hi < 245) & ((hi - lo) / np.maximum(hi, 1) < 0.22)
+    if neutral.mean() < 0.03:  # too little white or gray to judge the light: leave the colors alone
+        return np.ones(3, dtype=np.float32)
+    means = np.median(small[neutral], axis=0)
+    gains = 1 + 0.5 * (means.mean() / np.maximum(means, 1) - 1)
+    return np.clip(gains, 0.92, 1.08).astype(np.float32)
+
+
+def _white_from_point(img: Image.Image, pt: tuple[float, float]) -> np.ndarray:
+    """Gains that make the picked spot neutral: the person clicked something that should be white or gray (a wall,
+    a white shirt, a tile). Full strength, but at most 25 to 30% per color, and averaged over a small patch."""
+    x, y = round(pt[0] * (img.width - 1)), round(pt[1] * (img.height - 1))
+    r = max(2, round(min(img.size) * 0.006))
+    patch = np.asarray(img.convert("RGB").crop((max(0, x - r), max(0, y - r), x + r + 1, y + r + 1)), dtype=np.float32)
+    means = patch.reshape(-1, 3).mean(axis=0)
+    if means.max() < 25:  # picked something black: there's no color to read
+        return np.ones(3, dtype=np.float32)
+    return np.clip(means.mean() / np.maximum(means, 1), 0.75, 1.3).astype(np.float32)
+
+
+def _enhance(rgb: np.ndarray, alpha: np.ndarray, gains: np.ndarray | None = None) -> np.ndarray:
+    """Gentle fixes: a white balance measured on neutral parts of the photo (see _white_balance), then brightness and
+    contrast measured on the product (stretch the 1st to 99th percentile toward the full range, at most 1.35x).
+    The stretch is the same for all three colors, so it never shifts a color."""
     sel = alpha > 0.6
-    px = rgb[sel] if sel.sum() > 1000 else rgb.reshape(-1, 3)
-    means = px.mean(axis=0)
-    gray = means.mean()
-    gains = 1 + 0.5 * (gray / np.maximum(means, 1) - 1)
-    out = rgb * gains
+    out = rgb * (_white_balance(rgb) if gains is None else gains)
     lum = (out[sel] if sel.sum() > 1000 else out.reshape(-1, 3)) @ np.array([0.299, 0.587, 0.114])
     lo, hi = np.percentile(lum, 1), np.percentile(lum, 99)
     span = max(hi - lo, 1.0)
@@ -344,6 +383,8 @@ def _adjust(rgb: np.ndarray, e: Edits) -> np.ndarray:
     out = rgb
     if e.warmth:
         out = out * np.array([1 + 0.12 * e.warmth, 1 + 0.02 * e.warmth, 1 - 0.12 * e.warmth], dtype=np.float32)
+    if e.tint:
+        out = out * np.array([1 + 0.06 * e.tint, 1 - 0.10 * e.tint, 1 + 0.06 * e.tint], dtype=np.float32)
     if e.brightness:
         out = out * (1 + 0.45 * e.brightness)
     if e.contrast:
@@ -398,6 +439,15 @@ def render(img: Image.Image, product_mask_img: Image.Image | None, opts: Options
         except Exception:
             pass
     aux = Image.merge("RGB", (base, keep, remove))
+    # the colors are judged on the whole photo as it was opened (walls and floors tell the light's color best)
+    if e.white:
+        gains = _white_from_point(img, e.white)
+    elif opts.enhance and e.auto_color:
+        small = img.convert("RGB")
+        small.thumbnail((600, 600), Image.Resampling.BILINEAR)
+        gains = _white_balance(np.asarray(small, dtype=np.float32))
+    else:
+        gains = np.ones(3, dtype=np.float32)
     img, aux = _geometry(img, aux, e)
     if min(img.size) < 1000:
         warns.append("small")
@@ -446,7 +496,9 @@ def render(img: Image.Image, product_mask_img: Image.Image | None, opts: Options
     if opts.remove_background:
         rgb = _decontaminate(rgb, alpha)
     if opts.enhance:
-        rgb = _enhance(rgb, alpha)
+        rgb = _enhance(rgb, alpha, gains)
+    elif e.white:
+        rgb = rgb * gains
     rgb = _adjust(rgb, e)
 
     product = Image.fromarray(np.clip(rgb, 0, 255).astype(np.uint8), "RGB")
