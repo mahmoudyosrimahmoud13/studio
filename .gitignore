@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+models/*.onnx
+models/*.part
+jobs/
+studio.log
+.studio.pid

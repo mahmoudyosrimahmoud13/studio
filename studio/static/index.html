@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio</title>
+<style>
+  :root { --bg:#F6F4F1; --surface:#fff; --s2:#F0EDE8; --ink:#1C1917; --muted:#6B645D; --line:#E4DFD8; --accent:#9F1239;
+          --accent-soft:#FCE7EC; --ok:#065F46; --ok-bg:#ECFDF5; --warn:#92400E; --warn-bg:#FFFBEB; --bad:#991B1B;
+          --checker: #e9e6e1; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#161413; --surface:#1F1C1B; --s2:#2A2624; --ink:#F2EEEA; --muted:#A9A19A; --line:#38322F; --accent:#F43F5E;
+            --accent-soft:#3B1520; --ok:#6EE7B7; --ok-bg:#062E22; --warn:#FCD34D; --warn-bg:#3A2A05; --bad:#FCA5A5; --checker:#2e2a28; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 system-ui, -apple-system, "Segoe UI", "Noto Sans Arabic", Tahoma, sans-serif; }
+  header { display:flex; align-items:center; gap:12px; padding:14px 20px; border-bottom:1px solid var(--line); background:var(--surface); position:sticky; top:0; z-index:5; }
+  header h1 { font-size:18px; margin:0; letter-spacing:.2px; }
+  header .sub { color:var(--muted); font-size:13px; }
+  header .sp { flex:1; }
+  button, .btn { font:inherit; border-radius:10px; border:1px solid var(--line); background:var(--surface); color:var(--ink); padding:8px 14px; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
+  button:hover, .btn:hover { background:var(--s2); }
+  .primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .primary:hover { filter:brightness(1.08); background:var(--accent); }
+  button:disabled { opacity:.5; cursor:default; }
+  main { display:grid; grid-template-columns: 320px 1fr; gap:20px; padding:20px; max-width:1400px; margin:0 auto; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; padding:14px; } }
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:14px; }
+  aside.card { padding:16px; align-self:start; position:sticky; top:72px; }
+  @media (max-width: 860px) { aside.card { position:static; } }
+  .field { margin-bottom:14px; }
+  .label { font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; display:block; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chips label { cursor:pointer; }
+  .chips input { position:absolute; opacity:0; pointer-events:none; }
+  .chips span { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); border-radius:999px; padding:5px 11px; font-size:13px; background:var(--surface); }
+  .chips input:checked + span { border-color:var(--accent); background:var(--accent-soft); color:var(--ink); font-weight:600; }
+  .chips input:focus-visible + span { outline:2px solid var(--accent); outline-offset:2px; }
+  .sw { width:14px; height:14px; border-radius:50%; border:1px solid var(--line); display:inline-block; }
+  input[type=range] { width:100%; accent-color:var(--accent); }
+  input[type=color] { width:30px; height:26px; border:0; padding:0; background:none; cursor:pointer; vertical-align:middle; }
+  .row { display:flex; align-items:center; gap:8px; }
+  .toggle { display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer; margin:6px 0; }
+  .toggle input { width:16px; height:16px; accent-color:var(--accent); }
+  .hint { color:var(--muted); font-size:12.5px; }
+  #drop { border:2px dashed var(--line); border-radius:14px; padding:36px 20px; text-align:center; background:var(--surface); cursor:pointer; transition:.15s; }
+  #drop.over { border-color:var(--accent); background:var(--accent-soft); }
+  #drop b { font-size:17px; display:block; margin-bottom:4px; }
+  .bar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:16px 0; }
+  .bar .sp { flex:1; }
+  progress { width:180px; accent-color:var(--accent); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px; }
+  .item { overflow:hidden; display:flex; flex-direction:column; }
+  .pic { position:relative; aspect-ratio:1/1; background:repeating-conic-gradient(var(--checker) 0 25%, transparent 0 50%) 0 0/20px 20px; display:grid; place-items:center; cursor:zoom-in; user-select:none; }
+  .pic img { max-width:100%; max-height:100%; display:block; }
+  .pic .tag { position:absolute; top:8px; inset-inline-start:8px; background:rgba(0,0,0,.6); color:#fff; font-size:11px; padding:2px 8px; border-radius:999px; }
+  .pic .spin { width:28px; height:28px; border:3px solid var(--line); border-top-color:var(--accent); border-radius:50%; animation:s 1s linear infinite; }
+  @keyframes s { to { transform:rotate(360deg); } }
+  .meta { padding:10px 12px; display:flex; flex-direction:column; gap:6px; font-size:13px; }
+  .meta .name { font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .meta .acts { display:flex; gap:6px; flex-wrap:wrap; }
+  .meta .acts .btn, .meta .acts button { padding:5px 10px; font-size:12.5px; }
+  .warn { background:var(--warn-bg); color:var(--warn); border-radius:8px; padding:5px 8px; font-size:12px; }
+  .err { color:var(--bad); font-size:12.5px; }
+  .empty { color:var(--muted); text-align:center; padding:30px; }
+  .notice { margin:0 0 14px; padding:10px 12px; border-radius:10px; background:var(--warn-bg); color:var(--warn); font-size:13.5px; display:none; }
+  dialog { border:0; border-radius:14px; padding:0; max-width:min(92vw, 1100px); background:var(--surface); color:var(--ink); }
+  dialog::backdrop { background:rgba(0,0,0,.6); }
+  .cmp { display:grid; grid-template-columns:1fr 1fr; gap:2px; background:var(--line); }
+  .cmp figure { margin:0; background:repeating-conic-gradient(var(--checker) 0 25%, var(--surface) 0 50%) 0 0/20px 20px; display:flex; flex-direction:column; }
+  .cmp img { width:100%; height:min(70vh, 520px); object-fit:contain; display:block; }
+  .cmp figcaption { padding:6px 10px; font-size:12px; color:var(--muted); background:var(--surface); }
+  .dlg-bar { display:flex; justify-content:flex-end; padding:8px; gap:8px; }
+  @media (max-width: 600px) { .cmp { grid-template-columns:1fr; } .cmp img { height:38vh; } }
+</style>
+</head>
+<body>
+<header>
+  <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="7" width="26" height="20" rx="5" fill="var(--accent)"/><circle cx="16" cy="17" r="6" fill="#fff"/><circle cx="16" cy="17" r="3.2" fill="var(--accent)"/><rect x="10" y="4" width="8" height="4" rx="2" fill="var(--accent)"/></svg>
+  <div><h1 data-t="title">Studio</h1><div class="sub" data-t="tagline">Clean, matching product photos in one click</div></div>
+  <div class="sp"></div>
+  <button id="lang" type="button" aria-label="Language">ع</button>
+</header>
+
+<main>
+  <aside class="card" aria-label="Settings">
+    <div class="field">
+      <span class="label" data-t="bg">Background</span>
+      <div class="chips" id="bgChips">
+        <label><input type="radio" name="bg" value="#FFFFFF" checked><span><i class="sw" style="background:#fff"></i><b data-t="white">White</b></span></label>
+        <label><input type="radio" name="bg" value="#F4F2EF"><span><i class="sw" style="background:#F4F2EF"></i><b data-t="soft">Soft gray</b></span></label>
+        <label><input type="radio" name="bg" value="custom"><span><input type="color" id="bgColor" value="#F3E8E3" aria-label="Color"><b data-t="color">Color</b></span></label>
+        <label><input type="radio" name="bg" value="transparent"><span><i class="sw" style="background:repeating-conic-gradient(#ccc 0 25%,#fff 0 50%) 0 0/6px 6px"></i><b data-t="clear">See-through</b></span></label>
+      </div>
+    </div>
+    <div class="field">
+      <span class="label" data-t="shape">Shape</span>
+      <div class="chips">
+        <label><input type="radio" name="shape" value="square" checked><span data-t="square">Square</span></label>
+        <label><input type="radio" name="shape" value="portrait"><span data-t="portrait">Tall 4:5 (clothes)</span></label>
+        <label><input type="radio" name="shape" value="original"><span data-t="original">Keep photo shape</span></label>
+      </div>
+    </div>
+    <div class="field">
+      <span class="label"><span data-t="fill">Product size</span> <span id="fillVal" class="hint">82%</span></span>
+      <input type="range" id="fill" min="60" max="95" value="82">
+    </div>
+    <div class="field">
+      <span class="label" data-t="place">Position</span>
+      <div class="chips">
+        <label><input type="radio" name="place" value="center" checked><span data-t="center">Centered</span></label>
+        <label><input type="radio" name="place" value="floor"><span data-t="floor">Standing on the floor</span></label>
+      </div>
+    </div>
+    <div class="field">
+      <label class="toggle"><input type="checkbox" id="removeBg" checked><span data-t="removeBg">Remove the background</span></label>
+      <label class="toggle"><input type="checkbox" id="shadow" checked><span data-t="shadow">Soft shadow under the product</span></label>
+      <label class="toggle"><input type="checkbox" id="enhance" checked><span data-t="enhance">Fix light and colors</span></label>
+    </div>
+    <div class="field">
+      <span class="label" data-t="output">File</span>
+      <div class="chips">
+        <label><input type="radio" name="fmt" value="webp" checked><span>WebP</span></label>
+        <label><input type="radio" name="fmt" value="jpg"><span>JPG</span></label>
+        <label><input type="radio" name="fmt" value="png"><span>PNG</span></label>
+      </div>
+      <div class="chips" style="margin-top:6px">
+        <label><input type="radio" name="size" value="1200"><span dir="ltr">1200 px</span></label>
+        <label><input type="radio" name="size" value="1600" checked><span dir="ltr">1600 px</span></label>
+        <label><input type="radio" name="size" value="2000"><span dir="ltr">2000 px</span></label>
+      </div>
+      <p class="hint" data-t="fmtHint">WebP is smallest and works on every modern browser. Use JPG for WhatsApp or older apps.</p>
+    </div>
+    <button id="again" type="button" disabled style="width:100%" data-t="again">Redo all with these settings</button>
+  </aside>
+
+  <section>
+    <p class="notice" id="notice"></p>
+    <div id="drop" tabindex="0" role="button" aria-label="Add photos">
+      <b data-t="drop">Drop product photos here</b>
+      <span class="hint" data-t="drop2">or click to choose. JPG, PNG, WebP or iPhone (HEIC). Nothing leaves this computer.</span>
+      <input id="pick" type="file" accept="image/*,.heic,.heif" multiple hidden>
+    </div>
+    <div class="bar">
+      <span id="count" class="hint"></span>
+      <progress id="prog" value="0" max="1" hidden></progress>
+      <span class="sp"></span>
+      <button id="clear" type="button" disabled data-t="clearAll">Clear</button>
+      <a id="zip" class="btn primary" href="#" download aria-disabled="true" style="pointer-events:none;opacity:.5" data-t="zip">Download all (ZIP)</a>
+    </div>
+    <div class="grid" id="grid"><p class="empty" data-t="empty">Your cleaned photos will show here.</p></div>
+  </section>
+</main>
+
+<dialog id="dlg">
+  <div class="cmp"><figure><img id="dBefore" alt=""><figcaption data-t="before">Before</figcaption></figure><figure><img id="dAfter" alt=""><figcaption data-t="after">After</figcaption></figure></div>
+  <div class="dlg-bar"><button type="button" id="dClose" data-t="close">Close</button></div>
+</dialog>
+
+<script>
+const T = {
+  ar: { title: "ستوديو", tagline: "صور منتجات نضيفة ومتناسقة بضغطة", bg: "الخلفية", white: "أبيض", soft: "رمادي فاتح", color: "لون", clear: "شفافة",
+    shape: "الشكل", square: "مربع", portrait: "طولي ٤:٥ (هدوم)", original: "زي الصورة", fill: "حجم المنتج", place: "المكان", center: "في النص",
+    floor: "واقف على الأرض", removeBg: "شيل الخلفية", shadow: "ظل خفيف تحت المنتج", enhance: "ظبّط الإضاءة والألوان", output: "الملف",
+    fmtHint: "WebP أصغر حجم وبيشتغل على كل المتصفحات الحديثة. استخدم JPG للواتساب أو البرامج القديمة.", again: "أعد الكل بالإعدادات دي",
+    drop: "اسحب صور المنتجات هنا", drop2: "أو دوس واختار. JPG أو PNG أو WebP أو صور الآيفون (HEIC). مفيش حاجة بتخرج من الكمبيوتر ده.",
+    clearAll: "امسح", zip: "نزّل الكل (ZIP)", empty: "الصور بعد التنضيف هتظهر هنا.", before: "قبل", after: "بعد", close: "اقفل",
+    download: "نزّل", compare: "قارن", working: "بنشتغل…", waiting: "مستني", of: "من", photos: "صورة", failed: "ماقدرناش نعدّل الصورة دي",
+    noModel: "نموذج إزالة الخلفية مش موجود لسه. شغّل ./run.sh مرة عشان ينزّله.",
+    warns: { small: "الصورة صغيرة، فالنتيجة ممكن تبان مش حادة. استخدم ١٠٠٠ بكسل على الأقل في الضلع الصغير.", dark: "الصورة ضلمة. صوّر جنب شباك أو في إضاءة أكتر.",
+      blurry: "المنتج باين مش واضح. ثبّت الموبايل أو استخدم ستاند، ودوس على المنتج عشان يعمل فوكس.", cut: "المنتج لامس طرف الصورة، فممكن جزء منه يكون مقطوع. سيب مسافة حواليه.",
+      unclear: "ماقدرناش نحدد المنتج كويس. استخدم خلفية سادة بلون مختلف عن المنتج." },
+    errs: { too_big: "الصورة كبيرة أوي.", not_image: "ده مش ملف صورة." } },
+};
+let lang = localStorage.getItem("studio-lang") || "en";
+const tr = (k, en) => (lang === "ar" && T.ar[k]) || en;
+const EN = {};
+document.querySelectorAll("[data-t]").forEach((el) => (EN[el.dataset.t] = el.textContent));
+function applyLang() {
+  document.documentElement.lang = lang; document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  document.querySelectorAll("[data-t]").forEach((el) => (el.textContent = lang === "ar" ? (T.ar[el.dataset.t] ?? EN[el.dataset.t]) : EN[el.dataset.t]));
+  document.getElementById("lang").textContent = lang === "ar" ? "EN" : "ع";
+  render();
+}
+document.getElementById("lang").onclick = () => { lang = lang === "ar" ? "en" : "ar"; try { localStorage.setItem("studio-lang", lang); } catch {} applyLang(); };
+
+const $ = (id) => document.getElementById(id);
+const newJob = () => Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => b.toString(16).padStart(2, "0")).join("");
+let job = newJob(); // one folder of results per batch; "Redo" and "Clear" start a new one, so the ZIP has no old copies
+const items = []; // { file, before, state: waiting|working|done|error, result, error }
+let running = false;
+
+function settings() {
+  const pick = (n) => document.querySelector(`input[name=${n}]:checked`).value;
+  const bg = pick("bg");
+  return { background: bg === "custom" ? $("bgColor").value : bg, shape: pick("shape"), size: pick("size"), fill: $("fill").value / 100,
+    place: pick("place"), shadow: $("shadow").checked ? "soft" : "none", enhance: $("enhance").checked, remove_background: $("removeBg").checked, fmt: pick("fmt") };
+}
+$("fill").oninput = () => ($("fillVal").textContent = $("fill").value + "%");
+$("bgColor").oninput = () => (document.querySelector('input[name=bg][value=custom]').checked = true);
+
+function addFiles(list) {
+  for (const f of list) if (f.type.startsWith("image/") || /\.(heic|heif)$/i.test(f.name)) items.push({ file: f, before: URL.createObjectURL(f), state: "waiting" });
+  render(); run();
+}
+const drop = $("drop");
+drop.onclick = () => $("pick").click();
+drop.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("pick").click(); } };
+$("pick").onchange = (e) => { addFiles(e.target.files); e.target.value = ""; };
+["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", (e) => addFiles(e.dataTransfer.files));
+document.addEventListener("paste", (e) => addFiles([...(e.clipboardData?.files || [])]));
+
+async function run() {
+  if (running) return;
+  running = true;
+  const s = settings();
+  for (const it of items) {
+    if (it.state !== "waiting") continue;
+    it.state = "working"; render();
+    const fd = new FormData();
+    fd.append("file", it.file); fd.append("job", job);
+    for (const [k, v] of Object.entries(s)) fd.append(k, String(v));
+    try {
+      const r = await fetch("/api/process", { method: "POST", body: fd });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.detail || "failed");
+      it.result = { ...j, url: j.url + "?v=" + Date.now() }; it.state = "done";
+    } catch (e) { it.state = "error"; it.error = String(e.message || e); }
+    render();
+  }
+  running = false; render();
+}
+$("again").onclick = () => { job = newJob(); items.forEach((it) => { it.state = "waiting"; it.result = null; it.error = null; }); run(); };
+$("clear").onclick = () => { items.splice(0); job = newJob(); render(); };
+
+function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]); }
+function render() {
+  const done = items.filter((i) => i.state === "done").length, busy = items.some((i) => i.state === "working" || i.state === "waiting");
+  $("count").textContent = items.length ? `${done} ${tr("of", "of")} ${items.length} ${tr("photos", "photos")}` + (busy ? " · " + tr("working", "Working…") : "") : "";
+  $("prog").hidden = !busy; $("prog").max = items.length || 1; $("prog").value = done;
+  $("clear").disabled = !items.length || busy; $("again").disabled = !items.length || busy;
+  const zip = $("zip"), ok = done > 0 && !busy;
+  zip.href = ok ? `/api/jobs/${job}.zip` : "#"; zip.style.pointerEvents = ok ? "" : "none"; zip.style.opacity = ok ? "" : ".5"; zip.setAttribute("aria-disabled", ok ? "false" : "true");
+  if (!items.length) { $("grid").innerHTML = `<p class="empty">${esc(tr("empty", EN.empty))}</p>`; return; }
+  $("grid").innerHTML = items.map((it, i) => {
+    const pic = it.state === "done" ? `<img src="${it.result.url}" alt="">` : it.state === "error" ? `<img src="${it.before}" alt="" style="opacity:.5">` : `<div class="spin"></div>`;
+    const tag = it.state === "waiting" ? tr("waiting", "Waiting") : "";
+    const warns = (it.result?.warnings || []).map((w) => `<div class="warn">${esc(lang === "ar" ? T.ar.warns[w.code] || w.text : w.text)}</div>`).join("");
+    const err = it.state === "error" ? `<div class="err">${esc((lang === "ar" ? T.ar.errs[it.error] : null) || tr("failed", "Couldn't clean this photo") + (it.error.length < 40 ? ` (${it.error})` : ""))}</div>` : "";
+    const acts = it.state === "done" ? `<div class="acts"><a class="btn" href="${it.result.url}" download="${esc(it.result.name)}">${esc(tr("download", "Download"))}</a><button type="button" data-cmp="${i}">${esc(tr("compare", "Compare"))}</button><span class="hint" dir="ltr">${(it.result.bytes / 1024).toFixed(0)} KB</span></div>` : "";
+    return `<div class="card item"><div class="pic" data-cmp="${it.state === "done" ? i : ""}">${pic}${tag ? `<span class="tag">${esc(tag)}</span>` : ""}</div>
+      <div class="meta"><div class="name" title="${esc(it.file.name)}">${esc(it.file.name)}</div>${warns}${err}${acts}</div></div>`;
+  }).join("");
+}
+$("grid").addEventListener("click", (e) => {
+  const el = e.target.closest("[data-cmp]"); if (!el || el.dataset.cmp === "") return;
+  const it = items[+el.dataset.cmp]; $("dBefore").src = it.before; $("dAfter").src = it.result.url; $("dlg").showModal();
+});
+$("dClose").onclick = () => $("dlg").close();
+$("dlg").addEventListener("click", (e) => { if (e.target === $("dlg")) $("dlg").close(); });
+
+fetch("/api/status").then((r) => r.json()).then((s) => { if (!s.model_ready) { $("notice").textContent = tr("noModel", "The background model isn't downloaded yet. Run ./run.sh once to get it."); $("notice").style.display = "block"; } }).catch(() => {});
+applyLang();
+</script>
+</body>
+</html>
